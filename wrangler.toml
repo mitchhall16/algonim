@@ -1,8 +1,0 @@
-name = "algonim-worker"
-main = "worker.js"
-compatibility_date = "2024-01-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "algonim-db"
-database_id = "931aa039-1e47-4284-a422-f36f2791f4e8"
