@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoNim - Strategic Gaming on Algorand</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff00aa;
+            --neon-green: #00ff88;
+            --deep-purple: #1a0033;
+            --dark-bg: #0a0015;
+            --card-bg: rgba(26, 0, 51, 0.6);
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--dark-bg);
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 240, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 170, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--neon-blue);
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .wallet-button {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .wallet-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+        }
+
+        .wallet-button.connected {
+            background: linear-gradient(135deg, var(--neon-green), #00ccff);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 1.5rem;
+            height: calc(100vh - 150px);
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .wager-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .wager-option {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .wager-option:hover {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-blue);
+            transform: translateX(5px);
+        }
+
+        .wager-option.selected {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .wager-amount {
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .wager-players {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.3rem;
+        }
+
+        .matchmaking-section {
+            margin-top: 2rem;
+        }
+
+        .find-match-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--neon-pink), #ff3366);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .find-match-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 170, 0.6);
+        }
+
+        .find-match-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-area {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-screen {
+            text-align: center;
+        }
+
+        .welcome-screen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-screen p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .game-board {
+            display: none;
+            width: 100%;
+        }
+
+        .game-board.active {
+            display: block;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .player-details h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+        }
+
+        .player-rating {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .turn-indicator {
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--neon-green), #00ccff);
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+
+        .nim-board {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 3rem;
+            margin: 3rem 0;
+            min-height: 400px;
+        }
+
+        .nim-pile {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 0.3rem;
+            position: relative;
+        }
+
+        .pile-label {
+            position: absolute;
+            bottom: -30px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 0.9rem;
+        }
+
+        .nim-stick {
+            width: 8px;
+            height: 60px;
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.9) 0%,
+                var(--neon-blue) 50%,
+                var(--neon-pink) 100%
+            );
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            position: relative;
+        }
+
+        .nim-stick::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .nim-stick:hover:not(.removed):not(.disabled) {
+            transform: translateX(10px) scale(1.05);
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        .nim-stick.selected {
+            background: linear-gradient(180deg, 
+                var(--neon-green) 0%,
+                var(--neon-blue) 100%
+            );
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .nim-stick.removed {
+            opacity: 0.1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .nim-stick.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .control-btn.resign {
+            background: linear-gradient(135deg, #ff3366, #cc0033);
+        }
+
+        .chat-toggle {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-right: none;
+            border-radius: 15px 0 0 15px;
+            padding: 1rem 0.6rem;
+            cursor: pointer;
+            z-index: 101;
+            transition: all 0.3s ease;
+            writing-mode: vertical-rl;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+        }
+        .chat-toggle:hover {
+            background: rgba(0, 240, 255, 0.1);
+            padding-right: 1rem;
+        }
+        .chat-panel {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            bottom: 0;
+            width: 350px;
+            transition: right 0.4s ease;
+            z-index: 100;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-panel.open {
+            right: 0;
+        }
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .chat-close {
+            background: none;
+            border: none;
+            color: var(--neon-pink);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .chat-panel h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            margin-bottom: 1rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding-right: 0.5rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .chat-sender {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--neon-pink);
+            margin-bottom: 0.3rem;
+        }
+
+        .chat-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+        }
+
+        .chat-send {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+        }
+
+        .active-games {
+            margin-top: 2rem;
+        }
+
+        .game-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-item:hover {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-blue);
+            transform: translateX(5px);
+        }
+
+        .game-item-opponent {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            margin-bottom: 0.3rem;
+        }
+
+        .game-item-status {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .your-turn {
+            color: var(--neon-green);
+            font-weight: 700;
+        }
+
+        .wallet-selector {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            padding: 3rem;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.3);
+        }
+
+        .wallet-selector.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .wallet-selector h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--neon-blue);
+        }
+
+        .wallet-options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .wallet-option {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .wallet-option:hover {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-blue);
+            transform: translateY(-5px);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar, .chat-toggle {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-right: none;
+            border-radius: 15px 0 0 15px;
+            padding: 1rem 0.6rem;
+            cursor: pointer;
+            z-index: 101;
+            transition: all 0.3s ease;
+            writing-mode: vertical-rl;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+        }
+        .chat-toggle:hover {
+            background: rgba(0, 240, 255, 0.1);
+            padding-right: 1rem;
+        }
+        .chat-panel {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            bottom: 0;
+            width: 350px;
+            transition: right 0.4s ease;
+            z-index: 100;
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">⬢ ALGONIM</div>
+            <div class="header-right">
+                <div class="user-stats" id="userStats" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="userRating">1200</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="userWins">0</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="userLosses">0</div>
+                        <div class="stat-label">Losses</div>
+                    </div>
+                </div>
+                <div class="header-buttons" style="display: flex; gap: 1rem;">
+                    <button class="wallet-button" id="refreshBtn" style="padding: 0.8rem 1.2rem;" title="Refresh Page">↻</button>
+                    <button class="wallet-button" id="connectWallet">CONNECT WALLET</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Sidebar - Matchmaking -->
+            <div class="sidebar" id="sidebar" style="display: none;">
+                <h3>⚡ MATCHMAKING</h3>
+                
+                <div class="wager-selector">
+                    <div class="wager-option" data-wager="0.0001">
+                        <div class="wager-amount">0.0001 ALGO</div>
+                        <div class="wager-players" id="players-0.0001">2 players waiting</div>
+                    </div>
+                    <div class="wager-option" data-wager="0.001">
+                        <div class="wager-amount">0.001 ALGO</div>
+                        <div class="wager-players" id="players-0.001">5 players waiting</div>
+                    </div>
+                    <div class="wager-option" data-wager="0.01">
+                        <div class="wager-amount">0.01 ALGO</div>
+                        <div class="wager-players" id="players-0.01">12 players waiting</div>
+                    </div>
+                    <div class="wager-option selected" data-wager="0.1">
+                        <div class="wager-amount">0.1 ALGO</div>
+                        <div class="wager-players" id="players-0.1">18 players waiting</div>
+                    </div>
+                    <div class="wager-option" data-wager="1">
+                        <div class="wager-amount">1 ALGO</div>
+                        <div class="wager-players" id="players-1">8 players waiting</div>
+                    </div>
+                    <div class="wager-option" data-wager="10">
+                        <div class="wager-amount">10 ALGO</div>
+                        <div class="wager-players" id="players-10">3 players waiting</div>
+                    </div>
+                </div>
+
+                <div class="matchmaking-section">
+                    <button class="find-match-btn" id="findMatchBtn">FIND MATCH</button>
+                </div>
+
+                <div class="active-games">
+                    <h3>📱 YOUR GAMES</h3>
+                    <div id="activeGamesList">
+                        <p style="color: rgba(255,255,255,0.5); text-align: center; padding: 1rem;">No active games</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Game Area -->
+            <div class="game-area">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <h2>WELCOME TO NIM</h2>
+                    <p>Connect your wallet to start playing strategic games on Algorand. Match with players worldwide and compete for crypto rewards.</p>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--neon-blue); margin-bottom: 1rem;">How to Play</h3>
+                        <ul style="text-align: left; max-width: 400px; margin: 0 auto; color: rgba(255,255,255,0.7); line-height: 1.8;">
+                            <li>Three piles of sticks (3, 5, 7)</li>
+                            <li>Take turns removing sticks from ONE pile</li>
+                            <li>Remove any number from your chosen pile</li>
+                            <li>The player who takes the LAST stick LOSES</li>
+                            <li>Winner takes the entire pot!</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="game-board" id="gameBoard">
+                    <div class="game-header">
+                        <div class="player-info">
+                            <div class="player-avatar">Y</div>
+                            <div class="player-details">
+                                <h4 id="yourAddress">You</h4>
+                                <div class="player-rating">Rating: <span id="yourRatingDisplay">1200</span></div>
+                            </div>
+                        </div>
+                        <div class="turn-indicator" id="turnIndicator">YOUR TURN</div>
+                        <div class="player-info">
+                            <div class="player-details" style="text-align: right;">
+                                <h4 id="opponentAddress">Opponent</h4>
+                                <div class="player-rating">Rating: <span id="opponentRating">1180</span></div>
+                            </div>
+                            <div class="player-avatar" style="background: linear-gradient(135deg, var(--neon-pink), #ff3366);">O</div>
+                        </div>
+                    </div>
+
+                    <div class="nim-board" id="nimBoard">
+                        <!-- Piles will be generated here -->
+                    </div>
+
+                    <div class="game-controls">
+                        <button class="control-btn" id="confirmMoveBtn" disabled>CONFIRM MOVE</button>
+                        <button class="control-btn resign" id="resignBtn">RESIGN</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Chat -->
+            <!-- Chat Toggle -->
+            <div class="chat-toggle" id="chatToggle">💬 CHAT</div>
+            
+            <!-- Chat Panel -->
+            <div class="chat-panel" id="chatPanel">
+                <div class="chat-header">
+                    <h3>💬 GLOBAL CHAT</h3>
+                    <button class="chat-close" id="chatClose">✕</button>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message">
+                        <div class="chat-sender">System</div>
+                        <div class="chat-text">Welcome to AlgoNim! Chat with players worldwide.</div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+                    <button class="chat-send" id="chatSend">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="wallet-selector" id="walletSelector">
+        <h2>SELECT WALLET</h2>
+        <div class="wallet-options">
+            <div class="wallet-option" data-wallet="pera">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                <div>Pera Wallet</div>
+            </div>
+            <div class="wallet-option" data-wallet="defly">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🦋</div>
+                <div>Defly</div>
+            </div>
+            <div class="wallet-option" data-wallet="lute">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎵</div>
+                <div>Lute</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // State Management
+        const state = {
+            wallet: null,
+            address: null,
+            selectedWager: 0.1,
+            rating: 1200,
+            wins: 0,
+            losses: 0,
+            inGame: false,
+            currentGame: null,
+            activeGames: [],
+            gameState: {
+                piles: [3, 5, 7],
+                selectedPile: null,
+                selectedSticks: [],
+                isYourTurn: true,
+                opponent: null,
+                wager: 0.1
+            }
+        };
+
+        // Refresh
+        document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
+        
+        // Chat Toggle
+        const chatToggle = document.getElementById('chatToggle');
+        const chatClose = document.getElementById('chatClose');
+        chatToggle.addEventListener('click', () => chatPanel.classList.add('open'));
+        chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
+        
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connectWallet');
+        const walletSelector = document.getElementById('walletSelector');
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        const chatPanel = document.getElementById('chatPanel');
+        const userStats = document.getElementById('userStats');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const gameBoard = document.getElementById('gameBoard');
+        const nimBoard = document.getElementById('nimBoard');
+        const findMatchBtn = document.getElementById('findMatchBtn');
+        const confirmMoveBtn = document.getElementById('confirmMoveBtn');
+        const resignBtn = document.getElementById('resignBtn');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Wallet Connection
+        connectWalletBtn.addEventListener('click', () => {
+            walletSelector.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            walletSelector.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        document.querySelectorAll('.wallet-option').forEach(option => {
+            option.addEventListener('click', async () => {
+                const wallet = option.dataset.wallet;
+                await connectWallet(wallet);
+            });
+        });
+
+        async function connectWallet(walletType) {
+            state.wallet = walletType;
+            state.address = 'ALGO' + Math.random().toString(36).substring(2, 15).toUpperCase();
+            
+            connectWalletBtn.textContent = state.address.substring(0, 10) + '...';
+            connectWalletBtn.classList.add('connected');
+            
+            sidebar.style.display = 'block';
+            chatPanel.style.display = 'flex';
+            userStats.style.display = 'flex';
+            
+            document.getElementById('userRating').textContent = state.rating;
+            document.getElementById('yourAddress').textContent = state.address.substring(0, 8) + '...';
+            
+            walletSelector.classList.remove('active');
+            overlay.classList.remove('active');
+            
+            addChatMessage('System', `${state.address.substring(0, 8)}... connected!`);
+        }
+
+        // Wager Selection
+        document.querySelectorAll('.wager-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.wager-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                state.selectedWager = parseFloat(option.dataset.wager);
+            });
+        });
+
+        // Find Match
+        findMatchBtn.addEventListener('click', () => {
+            if (state.inGame) return;
+            
+            findMatchBtn.textContent = 'SEARCHING...';
+            findMatchBtn.disabled = true;
+            
+            addChatMessage('System', `Looking for match at ${state.selectedWager} ALGO...`);
+            
+            // Simulate finding match
+            setTimeout(() => {
+                startGame();
+            }, 2000);
+        });
+
+        function startGame() {
+            state.inGame = true;
+            state.gameState = {
+                piles: [3, 5, 7],
+                selectedPile: null,
+                selectedSticks: [],
+                isYourTurn: true,
+                opponent: 'OPPONENT' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+                wager: state.selectedWager
+            };
+            
+            welcomeScreen.style.display = 'none';
+            gameBoard.classList.add('active');
+            
+            document.getElementById('opponentAddress').textContent = state.gameState.opponent.substring(0, 8) + '...';
+            document.getElementById('opponentRating').textContent = Math.floor(1100 + Math.random() * 200);
+            
+            findMatchBtn.textContent = 'FIND MATCH';
+            findMatchBtn.disabled = false;
+            
+            renderNimBoard();
+            addChatMessage('System', `Game started! Wager: ${state.selectedWager} ALGO`);
+        }
+
+        function renderNimBoard() {
+            nimBoard.innerHTML = '';
+            
+            state.gameState.piles.forEach((count, pileIndex) => {
+                const pile = document.createElement('div');
+                pile.className = 'nim-pile';
+                
+                // Create sticks
+                for (let i = 0; i < count; i++) {
+                    const stick = document.createElement('div');
+                    stick.className = 'nim-stick';
+                    stick.dataset.pile = pileIndex;
+                    stick.dataset.index = i;
+                    
+                    if (!state.gameState.isYourTurn) {
+                        stick.classList.add('disabled');
+                    }
+                    
+                    stick.addEventListener('click', () => {
+                        if (state.gameState.isYourTurn && !stick.classList.contains('removed')) {
+                            selectStick(pileIndex, i, stick);
+                        }
+                    });
+                    
+                    pile.appendChild(stick);
+                }
+                
+                // Add label
+                const label = document.createElement('div');
+                label.className = 'pile-label';
+                label.textContent = `Pile ${pileIndex + 1} (${count})`;
+                pile.appendChild(label);
+                
+                nimBoard.appendChild(pile);
+            });
+        }
+
+        function selectStick(pileIndex, stickIndex, stickElement) {
+            // Can only select from one pile
+            if (state.gameState.selectedPile !== null && state.gameState.selectedPile !== pileIndex) {
+                return;
+            }
+            
+            state.gameState.selectedPile = pileIndex;
+            
+            // Select all sticks from this one to the top
+            const sticks = nimBoard.querySelectorAll(`[data-pile="${pileIndex}"]`);
+            sticks.forEach((s, idx) => {
+                if (idx >= stickIndex) {
+                    if (s.classList.contains('selected')) {
+                        s.classList.remove('selected');
+                        state.gameState.selectedSticks = state.gameState.selectedSticks.filter(i => i !== idx);
+                    } else {
+                        s.classList.add('selected');
+                        if (!state.gameState.selectedSticks.includes(idx)) {
+                            state.gameState.selectedSticks.push(idx);
+                        }
+                    }
+                }
+            });
+            
+            confirmMoveBtn.disabled = state.gameState.selectedSticks.length === 0;
+        }
+
+        confirmMoveBtn.addEventListener('click', () => {
+            if (state.gameState.selectedSticks.length === 0) return;
+            
+            // Remove selected sticks
+            const removeCount = state.gameState.selectedSticks.length;
+            state.gameState.piles[state.gameState.selectedPile] -= removeCount;
+            
+            // Check if game over
+            const totalSticks = state.gameState.piles.reduce((a, b) => a + b, 0);
+            if (totalSticks === 0) {
+                endGame(false); // You took the last stick, you lose
+                return;
+            }
+            
+            // Reset selection
+            state.gameState.selectedPile = null;
+            state.gameState.selectedSticks = [];
+            state.gameState.isYourTurn = false;
+            confirmMoveBtn.disabled = true;
+            
+            document.getElementById('turnIndicator').textContent = "OPPONENT'S TURN";
+            renderNimBoard();
+            
+            addChatMessage('You', `Removed ${removeCount} stick(s)`);
+            
+            // Simulate opponent move
+            setTimeout(opponentMove, 2000);
+        });
+
+        function opponentMove() {
+            // Simple AI
+            const availablePiles = state.gameState.piles.map((count, idx) => count > 0 ? idx : -1).filter(i => i >= 0);
+            if (availablePiles.length === 0) return;
+            
+            const randomPile = availablePiles[Math.floor(Math.random() * availablePiles.length)];
+            const removeCount = Math.floor(Math.random() * state.gameState.piles[randomPile]) + 1;
+            
+            state.gameState.piles[randomPile] -= removeCount;
+            
+            const totalSticks = state.gameState.piles.reduce((a, b) => a + b, 0);
+            if (totalSticks === 0) {
+                endGame(true); // Opponent took last stick, you win
+                return;
+            }
+            
+            state.gameState.isYourTurn = true;
+            document.getElementById('turnIndicator').textContent = 'YOUR TURN';
+            renderNimBoard();
+            
+            addChatMessage('Opponent', `Removed ${removeCount} stick(s) from pile ${randomPile + 1}`);
+        }
+
+        function endGame(won) {
+            state.inGame = false;
+            
+            if (won) {
+                state.wins++;
+                state.rating += 25;
+                addChatMessage('System', `🎉 You won ${state.selectedWager * 2} ALGO! Rating: ${state.rating} (+25)`);
+            } else {
+                state.losses++;
+                state.rating -= 15;
+                addChatMessage('System', `You lost ${state.selectedWager} ALGO. Rating: ${state.rating} (-15)`);
+            }
+            
+            document.getElementById('userRating').textContent = state.rating;
+            document.getElementById('userWins').textContent = state.wins;
+            document.getElementById('userLosses').textContent = state.losses;
+            
+            setTimeout(() => {
+                gameBoard.classList.remove('active');
+                welcomeScreen.style.display = 'block';
+            }, 3000);
+        }
+
+        resignBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to resign?')) {
+                addChatMessage('System', 'You resigned. Opponent wins.');
+                endGame(false);
+            }
+        });
+
+        // Chat
+        function addChatMessage(sender, text) {
+            const message = document.createElement('div');
+            message.className = 'chat-message';
+            message.innerHTML = `
+                <div class="chat-sender">${sender}</div>
+                <div class="chat-text">${text}</div>
+            `;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatSend.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        function sendChatMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            addChatMessage(state.address.substring(0, 8) + '...', text);
+            chatInput.value = '';
+            
+            // Simulate responses occasionally
+            if (Math.random() > 0.7) {
+                setTimeout(() => {
+                    const responses = ['gg!', 'Nice move', 'Good game', 'Well played'];
+                    addChatMessage('Player_' + Math.floor(Math.random() * 1000), 
+                        responses[Math.floor(Math.random() * responses.length)]);
+                }, 1000 + Math.random() * 2000);
+            }
+        }
+
+        // Update player counts randomly
+        setInterval(() => {
+            const wagers = ['0.0001', '0.001', '0.01', '0.1', '1', '10'];
+            wagers.forEach(w => {
+                const count = Math.floor(Math.random() * 20) + 1;
+                const el = document.getElementById(`players-${w}`);
+                if (el) el.textContent = `${count} players waiting`;
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

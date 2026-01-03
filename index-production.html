@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoNim - Play Nim on Algorand</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Algorand SDK -->
+    <script src="https://unpkg.com/algosdk@2.7.0/dist/browser/algosdk.min.js"></script>
+    <!-- Pera Wallet -->
+    <script src="https://unpkg.com/@perawallet/connect@1.3.4/dist/index.umd.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-magenta: #ff006e;
+            --neon-green: #39ff14;
+            --neon-purple: #bf00ff;
+            --deep-space: #0d0221;
+            --dark-matter: #0a0015;
+            --card-glass: rgba(13, 2, 33, 0.85);
+            --border-glow: rgba(0, 245, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--dark-matter);
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 15% 40%, rgba(0, 245, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 70%, rgba(255, 0, 110, 0.08) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 245, 255, 0.1);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .user-stats {
+            display: none;
+            gap: 2.5rem;
+            font-size: 0.9rem;
+        }
+
+        .user-stats.visible {
+            display: flex;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 245, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-cyan);
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.2rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .wallet-button, .refresh-button {
+            padding: 0.9rem 1.8rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .wallet-button:hover, .refresh-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(0, 245, 255, 0.6);
+        }
+
+        .wallet-button.connected {
+            background: linear-gradient(135deg, var(--neon-green), #00ccff);
+        }
+
+        .refresh-button {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-magenta));
+            padding: 0.9rem 1.2rem;
+        }
+
+        .main-wrapper {
+            display: flex;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.5rem;
+            min-height: calc(100vh - 180px);
+        }
+
+        .matchmaking-panel {
+            display: none;
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 245, 255, 0.1);
+            overflow-y: auto;
+        }
+
+        .matchmaking-panel.visible {
+            display: block;
+        }
+
+        .matchmaking-panel h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .wager-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .wager-option {
+            padding: 1.2rem;
+            background: rgba(0, 245, 255, 0.03);
+            border: 2px solid rgba(0, 245, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .wager-option:hover {
+            background: rgba(0, 245, 255, 0.08);
+            border-color: var(--neon-cyan);
+            transform: translateX(5px);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+        }
+
+        .wager-option.selected {
+            background: rgba(0, 245, 255, 0.15);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 245, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .wager-amount {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: 700;
+        }
+
+        .wager-players {
+            font-size: 0.75rem;
+            color: var(--neon-green);
+            margin-top: 0.4rem;
+            text-shadow: 0 0 8px var(--neon-green);
+        }
+
+        .wager-rating {
+            font-size: 0.7rem;
+            color: var(--neon-purple);
+            margin-top: 0.2rem;
+        }
+
+        .find-match-btn {
+            width: 100%;
+            padding: 1.4rem;
+            background: linear-gradient(135deg, var(--neon-magenta), #ff3366);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1.5rem;
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .find-match-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.6);
+        }
+
+        .find-match-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .game-area {
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 245, 255, 0.1);
+        }
+
+        .welcome-screen {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .welcome-screen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-flow 5s ease infinite;
+            background-size: 200% 200%;
+            letter-spacing: 3px;
+        }
+
+        @keyframes gradient-flow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .welcome-screen p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.15rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        .rules-box {
+            background: rgba(0, 245, 255, 0.05);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .rules-box h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .rules-box ul {
+            text-align: left;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 2;
+            list-style-position: inside;
+        }
+
+        .game-board {
+            display: none;
+            width: 100%;
+        }
+
+        .game-board.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            background: rgba(0, 245, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .player-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        .player-details h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            font-size: 1.1rem;
+        }
+
+        .player-rating {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.2rem;
+        }
+
+        .turn-indicator {
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, var(--neon-green), #00ccff);
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            box-shadow: 0 0 25px rgba(57, 255, 20, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(57, 255, 20, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(57, 255, 20, 0.7); }
+        }
+
+        .nim-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            margin: 3rem 0;
+            min-height: 450px;
+            justify-content: center;
+        }
+
+        .nim-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .row-label {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            font-size: 1rem;
+            width: 90px;
+            text-align: right;
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .row-sticks {
+            display: flex;
+            gap: 1rem;
+            justify-center;
+            min-width: 320px;
+        }
+
+        .nim-stick {
+            width: 10px;
+            height: 70px;
+            background: linear-gradient(180deg, 
+                rgba(255, 255, 255, 0.95) 0%,
+                var(--neon-cyan) 40%,
+                var(--neon-magenta) 100%
+            );
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.5);
+            position: relative;
+        }
+
+        .nim-stick::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+        }
+
+        .nim-stick:hover:not(.removed):not(.disabled) {
+            transform: scale(1.15) translateY(-8px);
+            box-shadow: 0 0 30px var(--neon-cyan);
+        }
+
+        .nim-stick.selected {
+            background: linear-gradient(180deg, 
+                var(--neon-green) 0%,
+                #00ff88 100%
+            );
+            box-shadow: 0 0 30px var(--neon-green);
+            transform: scale(1.1);
+        }
+
+        .nim-stick.removed {
+            opacity: 0.08;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .nim-stick.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 1.5rem;
+            justify-center;
+            margin-top: 3rem;
+        }
+
+        .control-btn {
+            padding: 1.2rem 2.5rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .control-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(0, 245, 255, 0.6);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: translateY(0);
+        }
+
+        .control-btn.resign {
+            background: linear-gradient(135deg, #ff3366, #cc0033);
+        }
+
+        .chat-toggle {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border-glow);
+            border-right: none;
+            border-radius: 15px 0 0 15px;
+            padding: 1.5rem 0.8rem;
+            cursor: pointer;
+            z-index: 101;
+            transition: all 0.3s ease;
+            box-shadow: -3px 0 20px rgba(0, 245, 255, 0.2);
+        }
+
+        .chat-toggle:hover {
+            background: rgba(0, 245, 255, 0.1);
+            padding-right: 1rem;
+        }
+
+        .chat-toggle-icon {
+            font-size: 1.8rem;
+            color: var(--neon-cyan);
+            writing-mode: vertical-rl;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        .chat-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border-left: 1px solid var(--border-glow);
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            transition: right 0.4s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-panel.open {
+            right: 0;
+        }
+
+        .chat-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: var(--neon-magenta);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .chat-close:hover {
+            transform: rotate(90deg);
+            color: var(--neon-cyan);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(0, 245, 255, 0.05);
+            border-radius: 12px;
+            border-left: 3px solid var(--neon-cyan);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .chat-sender {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--neon-magenta);
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .chat-text {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.5;
+        }
+
+        .chat-input-area {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(0, 245, 255, 0.2);
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            background: rgba(0, 245, 255, 0.05);
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+        }
+
+        .chat-send {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        .wallet-selector {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: var(--card-glass);
+            backdrop-filter: blur(30px);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 20px;
+            padding: 3rem;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 60px rgba(0, 245, 255, 0.4);
+        }
+
+        .wallet-selector.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .wallet-selector h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--neon-cyan);
+            letter-spacing: 3px;
+        }
+
+        .wallet-options {
+            display: grid;
+            gap: 1.2rem;
+        }
+
+        .wallet-option {
+            padding: 1.8rem;
+            background: rgba(0, 245, 255, 0.05);
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+
+        .wallet-option:hover {
+            background: rgba(0, 245, 255, 0.12);
+            border-color: var(--neon-cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 245, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .matchmaking-panel {
+                display: none !important;
+            }
+
+            .chat-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .chat-panel.open {
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">⬢ ALGONIM</div>
+            <div class="header-right">
+                <div class="user-stats" id="userStats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="userRating">1200</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="userWins">0</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="userLosses">0</div>
+                        <div class="stat-label">Losses</div>
+                    </div>
+                </div>
+                <div class="header-buttons">
+                    <button class="refresh-button" id="refreshBtn" title="Refresh / New Game">↻</button>
+                    <button class="wallet-button" id="connectWallet">CONNECT WALLET</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-wrapper">
+            <div class="main-content">
+                <!-- Matchmaking Panel -->
+                <div class="matchmaking-panel" id="matchmakingPanel">
+                    <h3>⚡ MATCHMAKING</h3>
+                    
+                    <div class="wager-selector">
+                        <div class="wager-option selected" data-wager="0.0001">
+                            <div class="wager-amount">0.0001 ALGO</div>
+                            <div class="wager-players" id="players-0.0001">2 players</div>
+                            <div class="wager-rating">Avg: 950</div>
+                        </div>
+                        <div class="wager-option" data-wager="0.001">
+                            <div class="wager-amount">0.001 ALGO</div>
+                            <div class="wager-players" id="players-0.001">5 players</div>
+                            <div class="wager-rating">Avg: 1100</div>
+                        </div>
+                        <div class="wager-option" data-wager="0.01">
+                            <div class="wager-amount">0.01 ALGO</div>
+                            <div class="wager-players" id="players-0.01">12 players</div>
+                            <div class="wager-rating">Avg: 1200</div>
+                        </div>
+                        <div class="wager-option" data-wager="0.1">
+                            <div class="wager-amount">0.1 ALGO</div>
+                            <div class="wager-players" id="players-0.1">18 players</div>
+                            <div class="wager-rating">Avg: 1350</div>
+                        </div>
+                        <div class="wager-option" data-wager="1">
+                            <div class="wager-amount">1 ALGO</div>
+                            <div class="wager-players" id="players-1">8 players</div>
+                            <div class="wager-rating">Avg: 1500</div>
+                        </div>
+                        <div class="wager-option" data-wager="10">
+                            <div class="wager-amount">10 ALGO</div>
+                            <div class="wager-players" id="players-10">3 players</div>
+                            <div class="wager-rating">Avg: 1650</div>
+                        </div>
+                    </div>
+
+                    <button class="find-match-btn" id="findMatchBtn">FIND MATCH</button>
+                </div>
+
+                <!-- Game Area -->
+                <div class="game-area">
+                    <div class="welcome-screen" id="welcomeScreen">
+                        <h2>NIM ON ALGORAND</h2>
+                        <p>Connect your Algorand wallet to enter the arena. Match with players worldwide in strategic battles for crypto rewards.</p>
+                        
+                        <div class="rules-box">
+                            <h3>⚡ GAME RULES</h3>
+                            <ul>
+                                <li>Pyramid of 4 rows: 1, 3, 5, 7 sticks</li>
+                                <li>Players alternate turns</li>
+                                <li>Remove any number from ONE row per turn</li>
+                                <li>The player who takes the LAST stick LOSES</li>
+                                <li>Winner takes the entire pot 💰</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="game-board" id="gameBoard">
+                        <div class="game-header">
+                            <div class="player-info">
+                                <div class="player-avatar">Y</div>
+                                <div class="player-details">
+                                    <h4 id="yourAddress">You</h4>
+                                    <div class="player-rating">Rating: <span id="yourRatingDisplay">1200</span></div>
+                                </div>
+                            </div>
+                            <div class="turn-indicator" id="turnIndicator">YOUR TURN</div>
+                            <div class="player-info">
+                                <div class="player-details" style="text-align: right;">
+                                    <h4 id="opponentAddress">Opponent</h4>
+                                    <div class="player-rating">Rating: <span id="opponentRating">1180</span></div>
+                                </div>
+                                <div class="player-avatar" style="background: linear-gradient(135deg, var(--neon-magenta), #ff3366);">O</div>
+                            </div>
+                        </div>
+
+                        <div class="nim-board" id="nimBoard"></div>
+
+                        <div class="game-controls">
+                            <button class="control-btn" id="confirmMoveBtn" disabled>CONFIRM MOVE</button>
+                            <button class="control-btn resign" id="resignBtn">RESIGN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Toggle Button -->
+            <div class="chat-toggle" id="chatToggle">
+                <div class="chat-toggle-icon">💬 CHAT</div>
+            </div>
+
+            <!-- Collapsible Chat Panel -->
+            <div class="chat-panel" id="chatPanel">
+                <div class="chat-header">
+                    <h3>💬 GLOBAL CHAT</h3>
+                    <button class="chat-close" id="chatClose">✕</button>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message">
+                        <div class="chat-sender">System</div>
+                        <div class="chat-text">Welcome to AlgoNim! Chat with players worldwide.</div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+                    <button class="chat-send" id="chatSend">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="wallet-selector" id="walletSelector">
+        <h2>SELECT WALLET</h2>
+        <div class="wallet-options">
+            <div class="wallet-option" data-wallet="pera">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📱</div>
+                <div>Pera Wallet</div>
+            </div>
+            <div class="wallet-option" data-wallet="defly">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🦋</div>
+                <div>Defly (Use Extension)</div>
+            </div>
+            <div class="wallet-option" data-wallet="lute">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎵</div>
+                <div>Lute (Use Extension)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION - Update these with your deployed URLs
+        const WORKER_URL =  'https://algonim-worker.yourname.workers.dev'
+        const USE_TESTNET = true; // Set to false for mainnet
+        
+        // Initialize Pera Wallet
+        const peraWallet = new PeraWalletConnect();
+        
+        // State
+        let walletAddress = null;
+        let selectedWager = 0.0001;
+        let userRating = 1200;
+        let userWins = 0;
+        let userLosses = 0;
+        let currentGameId = null;
+        let inGame = false;
+        let gameState = {
+            rows: [1, 3, 5, 7],
+            selectedRow: null,
+            selectedSticks: [],
+            isYourTurn: true,
+            opponent: null,
+            wager: 0.0001
+        };
+        
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connectWallet');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const walletSelector = document.getElementById('walletSelector');
+        const overlay = document.getElementById('overlay');
+        const matchmakingPanel = document.getElementById('matchmakingPanel');
+        const userStats = document.getElementById('userStats');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const gameBoard = document.getElementById('gameBoard');
+        const nimBoard = document.getElementById('nimBoard');
+        const findMatchBtn = document.getElementById('findMatchBtn');
+        const confirmMoveBtn = document.getElementById('confirmMoveBtn');
+        const resignBtn = document.getElementById('resignBtn');
+        const chatToggle = document.getElementById('chatToggle');
+        const chatPanel = document.getElementById('chatPanel');
+        const chatClose = document.getElementById('chatClose');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Refresh Page
+        refreshBtn.addEventListener('click', () => location.reload());
+        
+        // Chat Toggle
+        chatToggle.addEventListener('click', () => chatPanel.classList.add('open'));
+        chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
+        
+        // Wallet Connection
+        connectWalletBtn.addEventListener('click', () => {
+            walletSelector.classList.add('active');
+            overlay.classList.add('active');
+        });
+        
+        overlay.addEventListener('click', () => {
+            walletSelector.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+        
+        document.querySelectorAll('.wallet-option').forEach(option => {
+            option.addEventListener('click', async () => {
+                const wallet = option.dataset.wallet;
+                await connectWallet(wallet);
+            });
+        });
+        
+        async function connectWallet(walletType) {
+            try {
+                if (walletType === 'pera') {
+                    // Real Pera Wallet connection
+                    const accounts = await peraWallet.connect();
+                    walletAddress = accounts[0];
+                } else {
+                    // For other wallets, show instruction
+                    alert(`Please use the ${walletType} browser extension to connect`);
+                    // Simulated connection for demo
+                    walletAddress = 'ALGO' + Math.random().toString(36).substring(2, 15).toUpperCase();
+                }
+                
+                connectWalletBtn.textContent = walletAddress.substring(0, 10) + '...';
+                connectWalletBtn.classList.add('connected');
+                
+                matchmakingPanel.classList.add('visible');
+                userStats.classList.add('visible');
+                
+                document.getElementById('userRating').textContent = userRating;
+                document.getElementById('yourAddress').textContent = walletAddress.substring(0, 8) + '...';
+                
+                walletSelector.classList.remove('active');
+                overlay.classList.remove('active');
+                
+                addChatMessage('System', `${walletAddress.substring(0, 8)}... connected!`);
+                
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                alert('Failed to connect wallet. Please try again.');
+            }
+        }
+        
+        // Wager Selection
+        document.querySelectorAll('.wager-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.wager-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedWager = parseFloat(option.dataset.wager);
+            });
+        });
+        
+        // Find Match (Simulated for now - connect to your backend)
+        findMatchBtn.addEventListener('click', async () => {
+            if (inGame) return;
+            
+            findMatchBtn.textContent = 'SEARCHING...';
+            findMatchBtn.disabled = true;
+            
+            addChatMessage('System', `Looking for match at ${selectedWager} ALGO...`);
+            
+            // TODO: Replace with real API call
+            // const response = await fetch(`${WORKER_URL}/api/find-match`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ address: walletAddress, wager: selectedWager, rating: userRating })
+            // });
+            // const data = await response.json();
+            
+            // Simulated match for demo
+            setTimeout(() => {
+                startGame();
+                findMatchBtn.textContent = 'FIND MATCH';
+                findMatchBtn.disabled = false;
+            }, 2000);
+        });
+        
+        function startGame() {
+            inGame = true;
+            gameState = {
+                rows: [1, 3, 5, 7],
+                selectedRow: null,
+                selectedSticks: [],
+                isYourTurn: true,
+                opponent: 'OPPONENT' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+                wager: selectedWager
+            };
+            
+            welcomeScreen.style.display = 'none';
+            gameBoard.classList.add('active');
+            
+            document.getElementById('opponentAddress').textContent = gameState.opponent.substring(0, 8) + '...';
+            document.getElementById('opponentRating').textContent = Math.floor(1100 + Math.random() * 200);
+            
+            renderNimBoard();
+            addChatMessage('System', `Game started! Wager: ${selectedWager} ALGO`);
+        }
+        
+        function renderNimBoard() {
+            nimBoard.innerHTML = '';
+            
+            gameState.rows.forEach((count, rowIndex) => {
+                const row = document.createElement('div');
+                row.className = 'nim-row';
+                
+                const label = document.createElement('div');
+                label.className = 'row-label';
+                label.textContent = `Row ${rowIndex + 1}`;
+                row.appendChild(label);
+                
+                const sticksContainer = document.createElement('div');
+                sticksContainer.className = 'row-sticks';
+                
+                for (let i = 0; i < count; i++) {
+                    const stick = document.createElement('div');
+                    stick.className = 'nim-stick';
+                    stick.dataset.row = rowIndex;
+                    stick.dataset.index = i;
+                    
+                    if (!gameState.isYourTurn) {
+                        stick.classList.add('disabled');
+                    }
+                    
+                    stick.addEventListener('click', () => {
+                        if (gameState.isYourTurn && !stick.classList.contains('removed')) {
+                            selectStick(rowIndex, i, stick);
+                        }
+                    });
+                    
+                    sticksContainer.appendChild(stick);
+                }
+                
+                row.appendChild(sticksContainer);
+                nimBoard.appendChild(row);
+            });
+        }
+        
+        function selectStick(rowIndex, stickIndex, stickElement) {
+            if (gameState.selectedRow !== null && gameState.selectedRow !== rowIndex) {
+                return;
+            }
+            
+            gameState.selectedRow = rowIndex;
+            
+            const stickKey = `${rowIndex}-${stickIndex}`;
+            const idx = gameState.selectedSticks.indexOf(stickKey);
+            
+            if (idx >= 0) {
+                gameState.selectedSticks.splice(idx, 1);
+                stickElement.classList.remove('selected');
+            } else {
+                gameState.selectedSticks.push(stickKey);
+                stickElement.classList.add('selected');
+            }
+            
+            if (gameState.selectedSticks.length === 0) {
+                gameState.selectedRow = null;
+            }
+            
+            confirmMoveBtn.disabled = gameState.selectedSticks.length === 0;
+        }
+        
+        confirmMoveBtn.addEventListener('click', async () => {
+            if (gameState.selectedSticks.length === 0) return;
+            
+            const removeCount = gameState.selectedSticks.length;
+            gameState.rows[gameState.selectedRow] -= removeCount;
+            
+            const totalSticks = gameState.rows.reduce((a, b) => a + b, 0);
+            if (totalSticks === 0) {
+                endGame(false);
+                return;
+            }
+            
+            gameState.selectedRow = null;
+            gameState.selectedSticks = [];
+            gameState.isYourTurn = false;
+            confirmMoveBtn.disabled = true;
+            
+            document.getElementById('turnIndicator').textContent = "OPPONENT'S TURN";
+            renderNimBoard();
+            
+            addChatMessage('You', `Removed ${removeCount} stick(s)`);
+            
+            // TODO: Send move to backend
+            // await fetch(`${WORKER_URL}/api/make-move`, {
+            //     method: 'POST',
+            //     body: JSON.stringify({ gameId: currentGameId, move: {...} })
+            // });
+            
+            setTimeout(opponentMove, 2000);
+        });
+        
+        function opponentMove() {
+            const availableRows = gameState.rows.map((count, idx) => count > 0 ? idx : -1).filter(i => i >= 0);
+            if (availableRows.length === 0) return;
+            
+            const randomRow = availableRows[Math.floor(Math.random() * availableRows.length)];
+            const removeCount = Math.floor(Math.random() * gameState.rows[randomRow]) + 1;
+            
+            gameState.rows[randomRow] -= removeCount;
+            
+            const totalSticks = gameState.rows.reduce((a, b) => a + b, 0);
+            if (totalSticks === 0) {
+                endGame(true);
+                return;
+            }
+            
+            gameState.isYourTurn = true;
+            document.getElementById('turnIndicator').textContent = 'YOUR TURN';
+            renderNimBoard();
+            
+            addChatMessage('Opponent', `Removed ${removeCount} stick(s) from row ${randomRow + 1}`);
+        }
+        
+        function endGame(won) {
+            inGame = false;
+            
+            if (won) {
+                userWins++;
+                userRating += 25;
+                addChatMessage('System', `🎉 You won ${selectedWager * 2} ALGO! Rating: ${userRating} (+25)`);
+            } else {
+                userLosses++;
+                userRating -= 15;
+                addChatMessage('System', `You lost ${selectedWager} ALGO. Rating: ${userRating} (-15)`);
+            }
+            
+            document.getElementById('userRating').textContent = userRating;
+            document.getElementById('userWins').textContent = userWins;
+            document.getElementById('userLosses').textContent = userLosses;
+            
+            setTimeout(() => {
+                gameBoard.classList.remove('active');
+                welcomeScreen.style.display = 'block';
+            }, 3000);
+        }
+        
+        resignBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to resign?')) {
+                addChatMessage('System', 'You resigned. Opponent wins.');
+                endGame(false);
+            }
+        });
+        
+        // Chat
+        function addChatMessage(sender, text) {
+            const message = document.createElement('div');
+            message.className = 'chat-message';
+            message.innerHTML = `
+                <div class="chat-sender">${sender}</div>
+                <div class="chat-text">${text}</div>
+            `;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        chatSend.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+        
+        function sendChatMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            addChatMessage(walletAddress?.substring(0, 8) + '...', text);
+            chatInput.value = '';
+            
+            // TODO: Send to backend for global chat
+            // await fetch(`${WORKER_URL}/api/chat`, {
+            //     method: 'POST',
+            //     body: JSON.stringify({ address: walletAddress, message: text })
+            // });
+            
+            if (Math.random() > 0.7) {
+                setTimeout(() => {
+                    const responses = ['gg!', 'Nice move', 'Good game', 'Well played', 'Lucky!'];
+                    addChatMessage('Player_' + Math.floor(Math.random() * 1000), 
+                        responses[Math.floor(Math.random() * responses.length)]);
+                }, 1000 + Math.random() * 2000);
+            }
+        }
+        
+        // Update player counts
+        setInterval(() => {
+            const wagers = ['0.0001', '0.001', '0.01', '0.1', '1', '10'];
+            wagers.forEach(w => {
+                const count = Math.floor(Math.random() * 20) + 1;
+                const el = document.getElementById(`players-${w}`);
+                if (el) el.textContent = `${count} players`;
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
