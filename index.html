@@ -1294,7 +1294,71 @@
             justify-content: center;
             align-items: center;
             gap: 1rem;
-            padding: 1rem 0;
+            padding: 1.5rem;
+            border-radius: 20px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        /* Your turn - green glow effect */
+        .nim-pyramid.your-turn {
+            background: rgba(57, 255, 20, 0.03);
+            box-shadow:
+                0 0 30px rgba(57, 255, 20, 0.15),
+                inset 0 0 60px rgba(57, 255, 20, 0.05);
+            animation: pyramidGlowGreen 2s ease-in-out infinite;
+        }
+
+        .nim-pyramid.your-turn::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 22px;
+            border: 2px solid transparent;
+            background: linear-gradient(135deg, rgba(57, 255, 20, 0.5), transparent, rgba(57, 255, 20, 0.5)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes pyramidGlowGreen {
+            0%, 100% { box-shadow: 0 0 30px rgba(57, 255, 20, 0.15), inset 0 0 60px rgba(57, 255, 20, 0.05); }
+            50% { box-shadow: 0 0 50px rgba(57, 255, 20, 0.25), inset 0 0 80px rgba(57, 255, 20, 0.08); }
+        }
+
+        /* Opponent's turn - magenta glow effect */
+        .nim-pyramid.opponent-turn {
+            background: rgba(255, 0, 110, 0.03);
+            box-shadow:
+                0 0 30px rgba(255, 0, 110, 0.15),
+                inset 0 0 60px rgba(255, 0, 110, 0.05);
+        }
+
+        .nim-pyramid.opponent-turn::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 22px;
+            border: 2px solid rgba(255, 0, 110, 0.3);
+            animation: opponentWaiting 1.5s ease-in-out infinite;
+        }
+
+        @keyframes opponentWaiting {
+            0%, 100% { border-color: rgba(255, 0, 110, 0.3); }
+            50% { border-color: rgba(255, 0, 110, 0.6); }
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
         }
 
         .nim-row {
@@ -1353,11 +1417,92 @@
         }
 
         .stick.removed {
-            opacity: 0.15;
+            opacity: 0;
             background: #333;
             box-shadow: none;
             cursor: default;
-            transform: scale(0.9);
+            transform: scale(0.3) rotateX(90deg);
+            pointer-events: none;
+        }
+
+        /* Stick removal animation */
+        .stick.removing {
+            animation: stickRemove 0.6s ease-out forwards;
+        }
+
+        @keyframes stickRemove {
+            0% {
+                transform: translateY(0) scale(1) rotateX(0);
+                opacity: 1;
+                box-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
+            }
+            30% {
+                transform: translateY(-20px) scale(1.2) rotateX(0);
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 0, 110, 0.6);
+            }
+            100% {
+                transform: translateY(30px) scale(0) rotateX(90deg);
+                opacity: 0;
+                box-shadow: none;
+            }
+        }
+
+        /* Particle burst effect container */
+        .stick-particles {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: particleBurst 0.8s ease-out forwards;
+        }
+
+        @keyframes particleBurst {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Glow ring effect on removal */
+        .stick-glow-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid var(--neon-cyan);
+            transform: translate(-50%, -50%);
+            animation: glowRingExpand 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes glowRingExpand {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+                border-width: 3px;
+            }
+            100% {
+                width: 80px;
+                height: 80px;
+                opacity: 0;
+                border-width: 1px;
+            }
         }
 
         .stick.disabled {
@@ -1509,10 +1654,28 @@
 
         .modal-title.win {
             color: var(--neon-green);
+            text-shadow: 0 0 30px rgba(57, 255, 20, 0.8);
+            animation: winTitlePulse 0.5s ease-out;
+        }
+
+        @keyframes winTitlePulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .modal-title.lose {
             color: var(--neon-magenta);
+            text-shadow: 0 0 30px rgba(255, 0, 110, 0.8);
+            animation: loseTitleShake 0.5s ease-out;
+        }
+
+        @keyframes loseTitleShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
         }
 
         .modal-amount {
@@ -1523,15 +1686,93 @@
 
         .modal-amount.positive {
             color: var(--neon-green);
+            animation: amountBounce 0.6s ease-out 0.3s both;
         }
 
         .modal-amount.negative {
             color: var(--neon-magenta);
+            animation: amountFade 0.4s ease-out 0.3s both;
+        }
+
+        @keyframes amountBounce {
+            0% { transform: translateY(20px); opacity: 0; }
+            60% { transform: translateY(-10px); }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes amountFade {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
         .modal-message {
             color: #888;
             margin-bottom: 2rem;
+        }
+
+        /* Confetti container */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4000;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Victory glow overlay */
+        .victory-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2999;
+            animation: victoryFlash 0.8s ease-out;
+        }
+
+        @keyframes victoryFlash {
+            0% {
+                background: radial-gradient(circle at center, rgba(57, 255, 20, 0.4), transparent 70%);
+            }
+            100% {
+                background: radial-gradient(circle at center, rgba(57, 255, 20, 0), transparent 70%);
+            }
+        }
+
+        /* Defeat shake */
+        .defeat-shake {
+            animation: defeatShake 0.5s ease-out;
+        }
+
+        @keyframes defeatShake {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-20px); }
+            30% { transform: translateX(20px); }
+            50% { transform: translateX(-15px); }
+            70% { transform: translateX(15px); }
+            90% { transform: translateX(-5px); }
         }
 
         .btn-modal {
@@ -3349,14 +3590,20 @@
         }
 
         function updateTurnIndicator() {
+            const pyramid = document.getElementById('nimPyramid');
+
             if (GameState.match.isMyTurn) {
                 DOM.turnIndicator.textContent = 'YOUR TURN';
                 DOM.turnIndicator.className = 'turn-indicator your-turn';
                 DOM.selectionInfo.textContent = 'Click sticks to select (from one row only)';
+                pyramid.classList.remove('opponent-turn');
+                pyramid.classList.add('your-turn');
             } else {
                 DOM.turnIndicator.textContent = "OPPONENT'S TURN";
                 DOM.turnIndicator.className = 'turn-indicator opponent-turn';
                 DOM.selectionInfo.textContent = 'Waiting for opponent...';
+                pyramid.classList.remove('your-turn');
+                pyramid.classList.add('opponent-turn');
             }
             DOM.submitBtn.disabled = true;
         }
@@ -3393,112 +3640,260 @@
             }
         }
 
+        // Create particle burst effect on stick
+        function createParticleEffect(stickElement) {
+            const colors = ['#00f5ff', '#ff006e', '#ffd700', '#39ff14', '#bf00ff'];
+            const particleCount = 8;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                // Random direction
+                const angle = (i / particleCount) * Math.PI * 2;
+                const distance = 40 + Math.random() * 30;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                particle.style.cssText = `
+                    --tx: ${tx}px;
+                    --ty: ${ty}px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    box-shadow: 0 0 10px currentColor;
+                `;
+
+                stickElement.appendChild(particle);
+
+                // Remove particle after animation
+                setTimeout(() => particle.remove(), 800);
+            }
+
+            // Add glow ring
+            const ring = document.createElement('div');
+            ring.className = 'stick-glow-ring';
+            stickElement.appendChild(ring);
+            setTimeout(() => ring.remove(), 500);
+        }
+
+        // Animate stick removal with effects
+        function animateStickRemoval(stickElements, callback) {
+            let delay = 0;
+            const staggerDelay = 80; // ms between each stick animation
+
+            stickElements.forEach((stick, index) => {
+                setTimeout(() => {
+                    stick.classList.remove('selected');
+                    stick.classList.add('removing');
+                    createParticleEffect(stick);
+                }, delay);
+                delay += staggerDelay;
+            });
+
+            // Call callback after all animations complete
+            const totalTime = delay + 600; // 600ms is the animation duration
+            setTimeout(callback, totalTime);
+        }
+
         function submitMove() {
             if (GameState.selection.sticks.length === 0) return;
-            
+
             const row = GameState.selection.row;
-            
-            // Mark selected sticks as removed
-            GameState.selection.sticks.forEach(index => {
-                GameState.board[row][index] = false;
-            });
-            
-            // Reset selection
-            GameState.selection.row = null;
-            GameState.selection.sticks = [];
-            
-            // Stop my timer
-            stopTurnTimer();
-            
-            // Check game over - count remaining sticks
-            const total = GameState.board.flat().filter(s => s).length;
-            if (total === 0) {
-                endGame(false); // I took last stick, I lose
-                return;
+            const selectedIndices = [...GameState.selection.sticks];
+
+            // Disable button immediately
+            DOM.submitBtn.disabled = true;
+
+            // Find the stick elements to animate
+            const rowSizes = [1, 3, 5, 7];
+            let baseIndex = 0;
+            for (let r = 0; r < row; r++) {
+                baseIndex += rowSizes[r];
             }
-            
-            // Switch turn
-            GameState.match.isMyTurn = false;
-            renderBoard();
-            updateTurnIndicator();
-            
-            // Save game state
-            saveCurrentGame();
-            
-            // Simulate opponent (in production, this would be server-side)
-            setTimeout(simulateOpponentMove, 1500 + Math.random() * 1000);
+
+            const sticksToAnimate = selectedIndices.map(i => DOM.sticks[baseIndex + i]);
+
+            // Animate the removal
+            animateStickRemoval(sticksToAnimate, () => {
+                // Mark selected sticks as removed in game state
+                selectedIndices.forEach(index => {
+                    GameState.board[row][index] = false;
+                });
+
+                // Reset selection
+                GameState.selection.row = null;
+                GameState.selection.sticks = [];
+
+                // Stop my timer
+                stopTurnTimer();
+
+                // Check game over - count remaining sticks
+                const total = GameState.board.flat().filter(s => s).length;
+                if (total === 0) {
+                    endGame(false); // I took last stick, I lose
+                    return;
+                }
+
+                // Switch turn
+                GameState.match.isMyTurn = false;
+                renderBoard();
+                updateTurnIndicator();
+
+                // Save game state
+                saveCurrentGame();
+
+                // Simulate opponent (in production, this would be server-side)
+                setTimeout(simulateOpponentMove, 1500 + Math.random() * 1000);
+            });
         }
 
         function simulateOpponentMove() {
             if (!GameState.match.active || GameState.match.isMyTurn) return;
-            
+
             // Find rows with remaining sticks
             const validRows = [];
             GameState.board.forEach((row, idx) => {
                 const remaining = row.filter(s => s).length;
                 if (remaining > 0) validRows.push(idx);
             });
-            
+
             if (validRows.length === 0) return;
-            
+
             // Pick random row
             const rowIdx = validRows[Math.floor(Math.random() * validRows.length)];
             const row = GameState.board[rowIdx];
-            
+
             // Find available sticks in this row
             const availableIndices = [];
             row.forEach((present, idx) => {
                 if (present) availableIndices.push(idx);
             });
-            
+
             // Remove 1 to all available sticks randomly
             const removeCount = Math.floor(Math.random() * availableIndices.length) + 1;
             const toRemove = availableIndices.slice(0, removeCount);
-            
-            // Mark them as removed
-            toRemove.forEach(idx => {
-                GameState.board[rowIdx][idx] = false;
-            });
-            
-            // Check game over
-            const total = GameState.board.flat().filter(s => s).length;
-            if (total === 0) {
-                endGame(true); // Opponent took last stick, I win!
-                return;
+
+            // Find stick elements to animate
+            const rowSizes = [1, 3, 5, 7];
+            let baseIndex = 0;
+            for (let r = 0; r < rowIdx; r++) {
+                baseIndex += rowSizes[r];
             }
-            
-            // My turn - start timer
-            GameState.match.isMyTurn = true;
-            renderBoard();
-            updateTurnIndicator();
-            startTurnTimer();
+            const sticksToAnimate = toRemove.map(i => DOM.sticks[baseIndex + i]);
+
+            // Animate opponent's removal with magenta theme
+            animateStickRemoval(sticksToAnimate, () => {
+                // Mark them as removed
+                toRemove.forEach(idx => {
+                    GameState.board[rowIdx][idx] = false;
+                });
+
+                // Check game over
+                const total = GameState.board.flat().filter(s => s).length;
+                if (total === 0) {
+                    endGame(true); // Opponent took last stick, I win!
+                    return;
+                }
+
+                // My turn - start timer
+                GameState.match.isMyTurn = true;
+                renderBoard();
+                updateTurnIndicator();
+                startTurnTimer();
+            });
+        }
+
+        // Create confetti celebration effect
+        function createConfetti() {
+            const container = document.createElement('div');
+            container.className = 'confetti-container';
+            document.body.appendChild(container);
+
+            const colors = ['#00f5ff', '#ff006e', '#39ff14', '#ffd700', '#bf00ff', '#ffffff'];
+            const confettiCount = 100;
+
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+
+                    // Random properties
+                    const left = Math.random() * 100;
+                    const size = 5 + Math.random() * 10;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const duration = 2 + Math.random() * 2;
+                    const delay = Math.random() * 0.5;
+
+                    // Random shape
+                    const shapes = ['50%', '0', '50% 0 50% 50%'];
+                    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+                    confetti.style.cssText = `
+                        left: ${left}%;
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: ${color};
+                        border-radius: ${shape};
+                        animation-duration: ${duration}s;
+                        animation-delay: ${delay}s;
+                        box-shadow: 0 0 ${size}px ${color};
+                    `;
+
+                    container.appendChild(confetti);
+                }, i * 20);
+            }
+
+            // Remove container after animation
+            setTimeout(() => container.remove(), 5000);
+        }
+
+        // Create victory glow flash
+        function createVictoryGlow() {
+            const glow = document.createElement('div');
+            glow.className = 'victory-glow';
+            document.body.appendChild(glow);
+            setTimeout(() => glow.remove(), 800);
+        }
+
+        // Apply defeat shake to game area
+        function applyDefeatShake() {
+            const gameArea = document.querySelector('.game-area');
+            gameArea.classList.add('defeat-shake');
+            setTimeout(() => gameArea.classList.remove('defeat-shake'), 500);
         }
 
         function endGame(didWin) {
             GameState.match.active = false;
             stopTurnTimer();
-            
+
+            // Remove pyramid glow classes
+            const pyramid = document.getElementById('nimPyramid');
+            pyramid.classList.remove('your-turn', 'opponent-turn');
+
             // Remove from active games
             if (GameState.currentGameIndex !== null) {
                 GameState.activeGames.splice(GameState.currentGameIndex, 1);
                 GameState.currentGameIndex = null;
             }
-            
+
             const modeName = GAME_MODES[GameState.match.gameMode]?.name || 'Casual';
-            
+
             // Generate transaction note for winner's payment
             let txnNote = '';
-            
-            // Update stats
+
+            // Update stats and trigger celebration/defeat effects
             if (didWin) {
+                // Victory effects
+                createVictoryGlow();
+                setTimeout(createConfetti, 200);
+
                 GameState.stats.wins++;
                 GameState.stats.earnings += GameState.match.wager;
                 GameState.stats.rating += 15 + Math.floor(Math.random() * 10);
                 GameState.wallet.balance += GameState.match.wager;
-                
+
                 txnNote = generateWinNote('opponent_last_stick', modeName, GameState.match.opponent, GameState.match.pot.toFixed(4));
                 console.log(`[TXN NOTE] Winner receives: ${txnNote}`);
-                
+
                 DOM.resultIcon.textContent = '🎉';
                 DOM.resultTitle.textContent = 'YOU WIN!';
                 DOM.resultTitle.className = 'modal-title win';
@@ -3506,14 +3901,17 @@
                 DOM.resultAmount.className = 'modal-amount positive';
                 DOM.resultMessage.textContent = `Won by: Opponent took last stick | Mode: ${modeName}`;
             } else {
+                // Defeat effects
+                applyDefeatShake();
+
                 GameState.stats.losses++;
                 GameState.stats.earnings -= GameState.match.wager;
                 GameState.stats.rating -= 10 + Math.floor(Math.random() * 5);
                 GameState.wallet.balance -= GameState.match.wager;
-                
+
                 txnNote = generateLossNote('took_last_stick', modeName, GameState.match.opponent, GameState.match.wager);
                 console.log(`[TXN NOTE] Loser record: ${txnNote}`);
-                
+
                 DOM.resultIcon.textContent = '😔';
                 DOM.resultTitle.textContent = 'YOU LOSE';
                 DOM.resultTitle.className = 'modal-title lose';
@@ -3521,18 +3919,20 @@
                 DOM.resultAmount.className = 'modal-amount negative';
                 DOM.resultMessage.textContent = `Lost by: You took last stick | Mode: ${modeName}`;
             }
-            
+
             // Update displays
             DOM.statWins.textContent = GameState.stats.wins;
             DOM.statLosses.textContent = GameState.stats.losses;
             DOM.statRating.textContent = Math.max(0, GameState.stats.rating);
             DOM.statEarnings.textContent = GameState.stats.earnings.toFixed(2);
-            
+
             // Update active games panel
             renderActiveGames();
-            
-            // Show modal
-            DOM.resultModal.classList.add('active');
+
+            // Show modal with slight delay for effects
+            setTimeout(() => {
+                DOM.resultModal.classList.add('active');
+            }, didWin ? 300 : 100);
         }
 
         function returnToLobby() {
