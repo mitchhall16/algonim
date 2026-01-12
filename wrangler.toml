@@ -2,7 +2,26 @@ name = "algonim-worker"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# D1 Database
 [[d1_databases]]
 binding = "DB"
 database_name = "algonim-db"
 database_id = "931aa039-1e47-4284-a422-f36f2791f4e8"
+
+# Environment variables (public - these are safe to commit)
+[vars]
+ESCROW_ADDRESS = ""  # Fill in your escrow wallet address
+SERVER_ADDRESS = ""  # Fill in your server wallet address
+
+# Scheduled triggers for reminders and cleanup
+# Runs every 15 minutes to check for inactive games
+[triggers]
+crons = ["*/15 * * * *"]
+
+# SECRETS (set via `wrangler secret put`, NOT in this file):
+# - ESCROW_MNEMONIC: 25-word mnemonic for escrow wallet
+# - SERVER_MNEMONIC: 25-word mnemonic for server wallet
+#
+# To set secrets:
+#   wrangler secret put ESCROW_MNEMONIC
+#   wrangler secret put SERVER_MNEMONIC
