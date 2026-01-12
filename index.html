@@ -28,8 +28,8 @@
             font-family: 'Space Mono', monospace;
             background: var(--dark-matter);
             color: #fff;
-            min-height: 100vh;
-            overflow-x: hidden;
+            height: 100vh;
+            overflow: hidden;
         }
 
         /* Animated background */
@@ -73,9 +73,13 @@
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 1.5rem;
+            padding: 1rem;
             position: relative;
             z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         /* Header */
@@ -83,18 +87,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.2rem 2rem;
+            padding: 0.8rem 1.5rem;
             background: var(--card-glass);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-glow);
-            border-radius: 16px;
-            margin-bottom: 2rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
             box-shadow: 0 0 40px rgba(0, 245, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 900;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
             -webkit-background-clip: text;
@@ -103,56 +108,307 @@
             letter-spacing: 3px;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.6rem;
         }
 
         .logo-icon {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
         }
 
-        .header-right {
+        .header-center {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.5rem;
         }
 
         .header-btn {
-            padding: 0.6rem 1.2rem;
+            padding: 0.7rem 1.4rem;
             background: rgba(0, 245, 255, 0.1);
             border: 1px solid rgba(0, 245, 255, 0.3);
             border-radius: 25px;
             color: var(--neon-cyan);
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
+            font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .header-btn:hover {
             background: rgba(0, 245, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
         }
 
-        .balance-display {
+        /* Stats chips in header - match button size */
+        .header-stats {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .header-stats.visible {
+            display: flex;
+        }
+
+        .stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 20px;
             font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .stat-chip.wins {
             color: var(--neon-green);
-            padding: 0.6rem 1.2rem;
-            background: rgba(57, 255, 20, 0.1);
-            border: 1px solid rgba(57, 255, 20, 0.3);
-            border-radius: 30px;
+            border-color: rgba(57, 255, 20, 0.3);
+        }
+
+        .stat-chip.losses {
+            color: var(--neon-magenta);
+            border-color: rgba(255, 0, 110, 0.3);
+        }
+
+        .stat-chip.rating {
+            color: var(--neon-gold);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .stat-chip.earned {
+            color: var(--neon-cyan);
+            border-color: rgba(0, 245, 255, 0.3);
+        }
+
+        .stat-chip-label {
+            opacity: 0.8;
+        }
+
+        /* Header icons for friends and challenges */
+        .header-icons {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .header-icons.visible {
+            display: flex;
+        }
+
+        .header-icon-btn {
+            position: relative;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 20px;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(0, 245, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+        }
+
+        .header-icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            background: var(--neon-magenta);
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header-icon-btn .badge.hidden {
+            display: none;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 0.8rem;
+            background: rgba(0, 10, 20, 0.95);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: #ccc;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 5000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Dropdown for challenges/friends */
+        .header-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 10, 20, 0.98);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 12px;
+            padding: 1rem;
+            display: none;
+            z-index: 5000;
+            box-shadow: 0 15px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .header-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--neon-cyan);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.3);
+        }
+
+        .dropdown-empty {
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+            padding: 2rem;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem;
+            background: rgba(0, 245, 255, 0.05);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+        }
+
+        .dropdown-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .dropdown-item-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .dropdown-name {
+            font-size: 0.9rem;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .dropdown-detail {
+            font-size: 0.75rem;
+            color: var(--neon-gold);
+            margin-top: 0.2rem;
+        }
+
+        .dropdown-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .dropdown-btn {
+            padding: 0.5rem 0.8rem;
+            border: none;
+            border-radius: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dropdown-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .dropdown-btn.accept {
+            background: linear-gradient(135deg, var(--neon-green), #00ccff);
+            color: white;
+        }
+
+        .dropdown-btn.decline {
+            background: transparent;
+            border: 1px solid rgba(255, 0, 110, 0.5);
+            color: var(--neon-magenta);
+        }
+
+        .dropdown-btn.challenge {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            color: white;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .wallet-btn {
-            padding: 0.8rem 2rem;
+            padding: 0.7rem 1.8rem;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
             border: none;
             border-radius: 30px;
             color: white;
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s ease;
             letter-spacing: 1px;
@@ -167,27 +423,44 @@
             background: linear-gradient(135deg, var(--neon-green), #00ccff);
         }
 
-        /* Main Layout */
+        /* Main Layout - Fixed viewport, no scroll on game */
         .main-layout {
             display: grid;
             grid-template-columns: 320px 1fr;
-            gap: 2rem;
-            min-height: calc(100vh - 150px);
+            gap: 1rem;
+            flex: 1;
+            overflow: hidden;
         }
 
-        /* Sidebar */
+        /* Sidebar - scrollable */
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 0.8rem;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 3px;
         }
 
         .panel {
             background: var(--card-glass);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-glow);
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 12px;
+            padding: 1rem;
         }
 
         .panel-title {
@@ -195,24 +468,24 @@
             font-size: 1rem;
             font-weight: 700;
             color: var(--neon-cyan);
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        /* Wager Selection */
+        /* Wager Selection - 4 columns but BIGGER */
         .wager-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.8rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
         }
 
         .wager-option {
-            padding: 1rem;
+            padding: 0.8rem 0.4rem;
             background: rgba(0, 245, 255, 0.05);
             border: 2px solid rgba(0, 245, 255, 0.2);
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
@@ -226,52 +499,48 @@
         .wager-option.selected {
             background: rgba(0, 245, 255, 0.15);
             border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
         }
 
         .wager-amount {
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--neon-cyan);
         }
 
         .wager-label {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 0.3rem;
+            display: none;
         }
 
         .wager-players {
-            font-size: 0.7rem;
-            color: var(--neon-green);
-            margin-top: 0.4rem;
+            display: none;
         }
 
         /* Game Mode Selector */
         .mode-selector {
-            margin-top: 1.2rem;
-            padding-top: 1.2rem;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
             border-top: 1px solid rgba(0, 245, 255, 0.1);
         }
 
         .mode-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #888;
-            margin-bottom: 0.6rem;
+            margin-bottom: 0.5rem;
         }
 
         .mode-options {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
         .mode-option {
             flex: 1;
-            padding: 0.6rem 0.4rem;
+            padding: 0.8rem 0.5rem;
             background: rgba(0, 245, 255, 0.05);
-            border: 1px solid rgba(0, 245, 255, 0.2);
-            border-radius: 8px;
+            border: 2px solid rgba(0, 245, 255, 0.2);
+            border-radius: 10px;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s ease;
@@ -289,42 +558,44 @@
         .mode-name {
             display: block;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: var(--neon-cyan);
         }
 
-        .mode-desc {
+        .mode-time {
             display: block;
-            font-size: 0.6rem;
-            color: #666;
-            margin-top: 0.2rem;
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
         }
 
-        /* Timer Display */
+        .mode-option.selected .mode-time {
+            color: var(--neon-gold);
+        }
+
+        /* Timer Display - At top, centered, horizontal */
         .timer-display {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 0.3rem;
-            padding: 1rem 2rem;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--neon-cyan);
-            border-radius: 15px;
-            margin-bottom: 1rem;
-            min-width: 180px;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid var(--neon-cyan);
+            border-radius: 30px;
+            margin: 0.5rem auto 1rem;
+            box-shadow: 0 0 25px rgba(0, 245, 255, 0.4);
         }
 
         .timer-label {
-            font-size: 0.7rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 1.2rem;
         }
 
         .timer-value {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 900;
             color: var(--neon-cyan);
             text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
@@ -332,7 +603,7 @@
 
         .timer-ms {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: var(--neon-cyan);
             opacity: 0;
             transition: opacity 0.3s;
@@ -342,9 +613,19 @@
             opacity: 1;
         }
 
+        .timer-mode-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--neon-cyan);
+            color: var(--dark-matter);
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
         .timer-display.warning {
             border-color: var(--neon-gold);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
         }
 
         .timer-display.warning .timer-value,
@@ -353,9 +634,13 @@
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
 
+        .timer-display.warning .timer-mode-badge {
+            background: var(--neon-gold);
+        }
+
         .timer-display.critical {
             border-color: var(--neon-magenta);
-            box-shadow: 0 0 40px rgba(255, 0, 110, 0.5);
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.6);
             animation: timerShake 0.1s ease-in-out infinite;
         }
 
@@ -364,6 +649,10 @@
             color: var(--neon-magenta);
             text-shadow: 0 0 30px rgba(255, 0, 110, 0.8);
             animation: timerPulse 0.3s ease-in-out infinite;
+        }
+
+        .timer-display.critical .timer-mode-badge {
+            background: var(--neon-magenta);
         }
 
         @keyframes timerPulse {
@@ -391,15 +680,15 @@
         /* Find Match Button */
         .btn-primary {
             width: 100%;
-            padding: 1rem;
-            margin-top: 1rem;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
             border: none;
-            border-radius: 30px;
+            border-radius: 25px;
             color: white;
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s ease;
             letter-spacing: 1px;
@@ -407,7 +696,7 @@
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 30px rgba(0, 245, 255, 0.4);
+            box-shadow: 0 5px 25px rgba(0, 245, 255, 0.4);
         }
 
         .btn-primary:disabled {
@@ -417,15 +706,15 @@
 
         .btn-secondary {
             width: 100%;
-            padding: 0.8rem;
-            margin-top: 0.8rem;
+            padding: 0.6rem;
+            margin-top: 0.6rem;
             background: transparent;
             border: 2px solid var(--neon-cyan);
-            border-radius: 30px;
+            border-radius: 25px;
             color: var(--neon-cyan);
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.3s ease;
             letter-spacing: 1px;
@@ -433,7 +722,7 @@
 
         .btn-secondary:hover:not(:disabled) {
             background: rgba(0, 245, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
         }
 
         .btn-secondary:disabled {
@@ -642,20 +931,20 @@
         .friends-list {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
-            max-height: 200px;
+            gap: 0.35rem;
+            max-height: 100px;
             overflow-y: auto;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
         }
 
         .friend-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.7rem;
+            padding: 0.4rem 0.5rem;
             background: rgba(0, 245, 255, 0.05);
             border: 1px solid rgba(0, 245, 255, 0.2);
-            border-radius: 10px;
+            border-radius: 8px;
             transition: all 0.3s;
         }
 
@@ -666,18 +955,18 @@
         .friend-info {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.4rem;
         }
 
         .friend-avatar {
-            width: 32px;
-            height: 32px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.65rem;
         }
 
         .friend-details {
@@ -686,20 +975,20 @@
         }
 
         .friend-name {
-            font-size: 0.85rem;
+            font-size: 0.65rem;
             color: #fff;
         }
 
         .friend-address {
-            font-size: 0.7rem;
+            font-size: 0.55rem;
             color: #666;
         }
 
         .friend-status {
             display: flex;
             align-items: center;
-            gap: 0.3rem;
-            font-size: 0.65rem;
+            gap: 0.2rem;
+            font-size: 0.5rem;
         }
 
         .friend-status.online {
@@ -711,25 +1000,25 @@
         }
 
         .status-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: currentColor;
         }
 
         .friend-actions {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.25rem;
         }
 
         .btn-challenge-friend {
-            padding: 0.4rem 0.8rem;
+            padding: 0.25rem 0.5rem;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
             border: none;
-            border-radius: 15px;
+            border-radius: 10px;
             color: white;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.6rem;
+            font-size: 0.45rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
@@ -738,11 +1027,11 @@
         .btn-challenge-friend:hover { transform: scale(1.05); }
 
         .btn-remove-friend {
-            padding: 0.4rem;
+            padding: 0.25rem;
             background: transparent;
             border: none;
             color: #666;
-            font-size: 0.8rem;
+            font-size: 0.6rem;
             cursor: pointer;
             transition: color 0.3s;
         }
@@ -751,13 +1040,13 @@
 
         .btn-add-friend {
             width: 100%;
-            padding: 0.6rem;
+            padding: 0.4rem;
             background: transparent;
             border: 1px dashed rgba(0, 245, 255, 0.3);
-            border-radius: 10px;
+            border-radius: 8px;
             color: var(--neon-cyan);
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -768,7 +1057,7 @@
         }
 
         .friend-count {
-            font-size: 0.8rem;
+            font-size: 0.65rem;
             color: #666;
             font-weight: normal;
         }
@@ -823,10 +1112,11 @@
             background: var(--card-glass);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-glow);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 12px;
+            padding: 1rem;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         /* Welcome Screen */
@@ -837,43 +1127,44 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 2rem;
+            padding: 1rem;
+            overflow: hidden;
         }
 
         .welcome-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 900;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta), var(--neon-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             letter-spacing: 4px;
         }
 
         .welcome-subtitle {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #aaa;
             max-width: 500px;
-            line-height: 1.6;
-            margin-bottom: 2.5rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
         }
 
         .rules-box {
             background: rgba(0, 245, 255, 0.05);
             border: 1px solid rgba(0, 245, 255, 0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 600px;
+            border-radius: 12px;
+            padding: 1.2rem;
+            max-width: 550px;
             text-align: left;
         }
 
         .rules-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             color: var(--neon-cyan);
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -884,11 +1175,11 @@
         }
 
         .rules-list li {
-            padding: 0.6rem 0;
+            padding: 0.4rem 0;
             padding-left: 1.5rem;
             position: relative;
             color: #ccc;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .rules-list li::before {
@@ -1002,63 +1293,63 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 1.5rem;
-            padding: 2rem 0;
+            gap: 1rem;
+            padding: 1rem 0;
         }
 
         .nim-row {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.6rem;
         }
 
         .row-label {
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             color: var(--neon-cyan);
-            min-width: 70px;
+            min-width: 50px;
             text-align: right;
         }
 
         .sticks-container {
             display: flex;
-            gap: 0.6rem;
-            min-height: 80px;
+            gap: 0.5rem;
+            min-height: 60px;
             align-items: center;
         }
 
         .stick {
-            width: 35px;
-            height: 70px;
+            width: 28px;
+            height: 55px;
             background: linear-gradient(180deg, var(--neon-cyan) 0%, var(--neon-magenta) 100%);
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 245, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
             position: relative;
         }
 
         .stick::before {
             content: '';
             position: absolute;
-            top: 5px;
+            top: 4px;
             left: 50%;
             transform: translateX(-50%);
             width: 60%;
-            height: 8px;
+            height: 6px;
             background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .stick:hover:not(.removed):not(.disabled) {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.6);
+            transform: translateY(-6px);
+            box-shadow: 0 8px 25px rgba(0, 245, 255, 0.6);
         }
 
         .stick.selected {
             background: linear-gradient(180deg, var(--neon-gold) 0%, #ff8c00 100%);
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
-            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            transform: translateY(-4px);
         }
 
         .stick.removed {
@@ -1150,7 +1441,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 3000;
         }
 
         .modal-overlay.active {
@@ -1261,207 +1552,6 @@
             box-shadow: 0 5px 30px rgba(0, 245, 255, 0.4);
         }
 
-        /* Leaderboard */
-        .leaderboard-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .leaderboard-tab {
-            flex: 1;
-            padding: 0.7rem;
-            background: rgba(0, 245, 255, 0.1);
-            border: 1px solid rgba(0, 245, 255, 0.2);
-            border-radius: 10px;
-            color: #888;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .leaderboard-tab:hover {
-            background: rgba(0, 245, 255, 0.15);
-        }
-
-        .leaderboard-tab.active {
-            background: var(--neon-cyan);
-            color: var(--dark-matter);
-            border-color: var(--neon-cyan);
-        }
-
-        .leaderboard-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 245, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 0.6rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .leaderboard-item:hover {
-            background: rgba(0, 245, 255, 0.1);
-            border-color: rgba(0, 245, 255, 0.3);
-        }
-
-        .leaderboard-rank {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 700;
-            width: 35px;
-            text-align: center;
-        }
-
-        .leaderboard-rank.gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-        .leaderboard-rank.silver { color: #c0c0c0; text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
-        .leaderboard-rank.bronze { color: #cd7f32; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
-
-        .leaderboard-player { flex: 1; }
-
-        .leaderboard-name {
-            font-size: 0.9rem;
-            color: #fff;
-            margin-bottom: 0.2rem;
-        }
-
-        .leaderboard-address {
-            font-size: 0.7rem;
-            color: #666;
-        }
-
-        .leaderboard-stats { text-align: right; }
-
-        .leaderboard-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            color: var(--neon-cyan);
-        }
-
-        .leaderboard-record {
-            font-size: 0.7rem;
-            color: #888;
-        }
-
-        /* Player Profile */
-        .profile-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            margin: 0 auto 1rem;
-            box-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
-        }
-
-        .profile-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .profile-address {
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .profile-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .profile-stat {
-            text-align: center;
-            padding: 1rem 0.5rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-
-        .profile-stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            color: var(--neon-cyan);
-        }
-
-        .profile-stat-label {
-            font-size: 0.65rem;
-            color: #666;
-            margin-top: 0.3rem;
-        }
-
-        .match-history-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .match-history-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            color: var(--neon-cyan);
-            margin-bottom: 0.8rem;
-        }
-
-        .match-history-list {
-            max-height: 180px;
-            overflow-y: auto;
-        }
-
-        .match-history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.7rem 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            font-size: 0.8rem;
-        }
-
-        .match-opponent { color: #aaa; }
-        .match-wager { color: var(--neon-gold); }
-        .match-mode { color: #666; font-size: 0.7rem; }
-
-        .match-result {
-            font-family: 'Orbitron', sans-serif;
-            padding: 0.25rem 0.7rem;
-            border-radius: 12px;
-            font-size: 0.65rem;
-            font-weight: 700;
-        }
-
-        .match-result.win {
-            background: rgba(57, 255, 20, 0.2);
-            color: var(--neon-green);
-        }
-
-        .match-result.loss {
-            background: rgba(255, 0, 110, 0.2);
-            color: var(--neon-magenta);
-        }
-
-        .profile-actions {
-            display: flex;
-            gap: 0.8rem;
-        }
-
         /* Wallet Modal */
         .wallet-modal {
             max-width: 400px;
@@ -1518,23 +1608,23 @@
         .lobby-list {
             display: flex;
             flex-direction: column;
-            gap: 0.8rem;
-            max-height: 300px;
+            gap: 0.6rem;
+            max-height: 200px;
             overflow-y: auto;
         }
 
         .lobby-empty {
             text-align: center;
             color: #666;
-            font-size: 0.85rem;
-            padding: 1.5rem;
+            font-size: 0.8rem;
+            padding: 1rem;
         }
 
         .lobby-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.8rem 1rem;
+            padding: 0.7rem 0.8rem;
             background: rgba(0, 245, 255, 0.05);
             border: 1px solid rgba(0, 245, 255, 0.2);
             border-radius: 10px;
@@ -1560,7 +1650,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .lobby-info {
@@ -1592,7 +1682,7 @@
             padding: 0.4rem 0.8rem;
             background: linear-gradient(135deg, var(--neon-green), #00ccff);
             border: none;
-            border-radius: 20px;
+            border-radius: 15px;
             color: white;
             font-family: 'Orbitron', sans-serif;
             font-size: 0.7rem;
@@ -1756,12 +1846,54 @@
                 <span class="logo-icon">⬢</span>
                 ALGONIM
             </div>
-            <div class="header-right">
-                <button class="header-btn" id="rankingsBtn">🏆 RANKINGS</button>
-                <button class="header-btn" id="tournamentsBtn">⚔️ TOURNAMENTS</button>
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    <span id="balanceAmount">0.00</span> ALGO
+            <div class="header-center">
+                <button class="header-btn" id="rankingsBtn">RANKINGS</button>
+                <button class="header-btn" id="tournamentsBtn">TOURNAMENTS</button>
+                <div class="header-stats" id="headerStats">
+                    <div class="stat-chip wins">
+                        <span class="stat-chip-label">W</span>
+                        <span id="headerWins">0</span>
+                    </div>
+                    <div class="stat-chip losses">
+                        <span class="stat-chip-label">L</span>
+                        <span id="headerLosses">0</span>
+                    </div>
+                    <div class="stat-chip rating">
+                        <span>⭐</span>
+                        <span id="headerRating">1200</span>
+                    </div>
+                    <div class="stat-chip earned">
+                        <span id="headerEarned">0.00</span>
+                        <span class="stat-chip-label">Ⱥ</span>
+                    </div>
                 </div>
+                <div class="header-icons" id="headerIcons">
+                    <!-- Incoming Challenges -->
+                    <div class="header-icon-btn" id="challengesBtn">
+                        CHALLENGES
+                        <span class="badge hidden" id="challengesBadge">0</span>
+                        <div class="header-dropdown" id="challengesDropdown">
+                            <div class="dropdown-title">INCOMING CHALLENGES</div>
+                            <div id="challengesDropdownList">
+                                <div class="dropdown-empty">No pending challenges</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Friends -->
+                    <div class="header-icon-btn tooltip" id="friendsBtn" data-tooltip="Send invite via Pera using friend's wallet">
+                        FRIENDS
+                        <span class="badge hidden" id="friendsBadge">0</span>
+                        <div class="header-dropdown" id="friendsDropdown">
+                            <div class="dropdown-title">FRIENDS</div>
+                            <div id="friendsDropdownList">
+                                <div class="dropdown-empty">No friends yet</div>
+                            </div>
+                            <button class="btn-add-friend" id="addFriendBtnHeader" style="margin-top:0.5rem;">+ ADD FRIEND</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
                 <button class="wallet-btn" id="connectBtn">CONNECT WALLET</button>
             </div>
         </header>
@@ -1772,7 +1904,7 @@
             <div class="sidebar">
                 <!-- Matchmaking Panel -->
                 <div class="panel">
-                    <div class="panel-title">⚡ MATCHMAKING</div>
+                    <div class="panel-title">MATCHMAKING</div>
                     
                     <div class="wager-grid">
                         <div class="wager-option selected" data-wager="0.0001">
@@ -1803,25 +1935,21 @@
                         <div class="mode-options">
                             <div class="mode-option selected" data-mode="CASUAL">
                                 <span class="mode-name">Casual</span>
-                                <span class="mode-desc">No time limit</span>
+                                <span class="mode-time">No limit</span>
                             </div>
                             <div class="mode-option" data-mode="SPEED">
                                 <span class="mode-name">Speed</span>
-                                <span class="mode-desc">1 min/turn</span>
+                                <span class="mode-time">60s/turn</span>
                             </div>
                             <div class="mode-option" data-mode="BLITZ">
                                 <span class="mode-name">Blitz</span>
-                                <span class="mode-desc">30 sec/turn</span>
+                                <span class="mode-time">30s/turn</span>
                             </div>
                         </div>
                     </div>
 
                     <button class="btn-primary" id="findMatchBtn" disabled>
                         CONNECT WALLET FIRST
-                    </button>
-                    
-                    <button class="btn-secondary" id="invitePlayerBtn" disabled>
-                        📨 INVITE PLAYER
                     </button>
                     
                     <div class="status-message" id="matchStatus">
@@ -1831,14 +1959,14 @@
 
                 <!-- Pending Invites Panel -->
                 <div class="panel" id="pendingInvitesPanel" style="display: none;">
-                    <div class="panel-title">📨 SENT INVITES</div>
+                    <div class="panel-title">SENT INVITES</div>
                     <div class="pending-invites-list" id="pendingInvitesList">
                     </div>
                 </div>
 
                 <!-- Lobby Panel -->
                 <div class="panel">
-                    <div class="panel-title">🎮 OPEN MATCHES</div>
+                    <div class="panel-title">OPEN MATCHES</div>
                     <div class="lobby-list" id="lobbyList">
                         <div class="lobby-empty">Connect wallet to see open matches</div>
                     </div>
@@ -1846,48 +1974,9 @@
 
                 <!-- Active Games Panel -->
                 <div class="panel" id="activeGamesPanel" style="display: none;">
-                    <div class="panel-title">🎯 YOUR ACTIVE GAMES</div>
+                    <div class="panel-title">YOUR ACTIVE GAMES</div>
                     <div class="active-games-list" id="activeGamesList">
                     </div>
-                </div>
-
-                <!-- Stats Panel -->
-                <div class="panel">
-                    <div class="panel-title">📊 YOUR STATS</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value" id="statWins">0</div>
-                            <div class="stat-label">Wins</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="statLosses">0</div>
-                            <div class="stat-label">Losses</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="statRating">1200</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="statEarnings">0.00</div>
-                            <div class="stat-label">Earned</div>
-                        </div>
-                    </div>
-                    <button class="view-history-btn" id="viewHistoryBtn" style="width:100%;margin-top:0.8rem;padding:0.6rem;background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);border-radius:20px;color:var(--neon-cyan);font-family:'Orbitron',sans-serif;font-size:0.7rem;cursor:pointer;">📜 VIEW MATCH HISTORY</button>
-                </div>
-
-                <!-- Incoming Invites Panel -->
-                <div class="panel" id="incomingInvitesPanel" style="display: none;">
-                    <div class="panel-title">📬 INCOMING CHALLENGES</div>
-                    <div class="incoming-invites-list" id="incomingInvitesList">
-                    </div>
-                </div>
-
-                <!-- Friends Panel -->
-                <div class="panel" id="friendsPanel" style="display: none;">
-                    <div class="panel-title">👥 FRIENDS <span class="friend-count" id="friendCount">(0)</span></div>
-                    <div class="friends-list" id="friendsList">
-                    </div>
-                    <button class="btn-add-friend" id="addFriendBtn">+ ADD FRIEND</button>
                 </div>
             </div>
 
@@ -1940,6 +2029,14 @@
                         </div>
                     </div>
 
+                    <!-- TIMER AT TOP -->
+                    <div class="timer-display" id="timerDisplay" style="display: none;">
+                        <span class="timer-label">⏱️</span>
+                        <span class="timer-value" id="timerValue">0:30</span>
+                        <span class="timer-ms" id="timerMs">.00</span>
+                        <span class="timer-mode-badge" id="timerModeBadge">BLITZ</span>
+                    </div>
+
                     <div class="nim-pyramid" id="nimPyramid">
                         <!-- Row 1: 1 stick -->
                         <div class="nim-row">
@@ -1984,12 +2081,6 @@
                     </div>
 
                     <div class="game-controls">
-                        <div class="timer-display" id="timerDisplay" style="display: none;">
-                            <span class="timer-label">Time Remaining</span>
-                            <span class="timer-value" id="timerValue">0:30</span>
-                            <span class="timer-ms" id="timerMs">.00</span>
-                            <span class="timer-mode-badge" id="timerModeBadge">BLITZ</span>
-                        </div>
                         <div class="turn-indicator your-turn" id="turnIndicator">
                             YOUR TURN
                         </div>
@@ -2134,75 +2225,6 @@
         </div>
     </div>
 
-    <!-- Leaderboard Modal -->
-    <div class="modal-overlay" id="leaderboardModal">
-        <div class="modal" style="max-width: 550px;">
-            <button class="modal-close" id="closeLeaderboardBtn">&times;</button>
-            <div class="modal-icon">🏆</div>
-            <h2 class="modal-title" style="color: var(--neon-gold);">LEADERBOARD</h2>
-            
-            <div class="leaderboard-tabs">
-                <button class="leaderboard-tab active" data-sort="rating">Rating</button>
-                <button class="leaderboard-tab" data-sort="wins">Wins</button>
-                <button class="leaderboard-tab" data-sort="earned">Earned</button>
-            </div>
-            
-            <div class="leaderboard-list" id="leaderboardList"></div>
-        </div>
-    </div>
-
-    <!-- Player Profile Modal -->
-    <div class="modal-overlay" id="playerProfileModal">
-        <div class="modal" style="max-width: 480px;">
-            <button class="modal-close" id="closePlayerProfileBtn">&times;</button>
-            <div class="profile-header">
-                <div class="profile-avatar">👤</div>
-                <div class="profile-name" id="playerProfileName">Player</div>
-                <div class="profile-address" id="playerProfileAddress">ALGO...</div>
-            </div>
-            <div class="profile-stats-grid">
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="playerProfileWins">0</div>
-                    <div class="profile-stat-label">Wins</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="playerProfileLosses">0</div>
-                    <div class="profile-stat-label">Losses</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="playerProfileRating">1200</div>
-                    <div class="profile-stat-label">Rating</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="playerProfileEarned">0.00</div>
-                    <div class="profile-stat-label">Earned</div>
-                </div>
-            </div>
-            <div class="match-history-section">
-                <div class="match-history-title">📜 MATCH HISTORY</div>
-                <div class="match-history-list" id="playerMatchHistory"></div>
-            </div>
-            <div class="profile-actions">
-                <button class="btn-modal" id="profileAddFriendBtn" style="flex:1;">ADD FRIEND</button>
-                <button class="btn-modal" id="profileChallengeBtn" style="flex:1;background:linear-gradient(135deg, var(--neon-green), #00ccff);">CHALLENGE</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tournament Modal -->
-    <div class="modal-overlay" id="tournamentModal">
-        <div class="modal" style="max-width: 500px;">
-            <button class="modal-close" id="closeTournamentBtn">&times;</button>
-            <div class="modal-icon">⚔️</div>
-            <h2 class="modal-title" style="color: var(--neon-magenta);">TOURNAMENTS</h2>
-            <div style="text-align: center; color: #666; padding: 3rem 1rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🏟️</div>
-                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No Active Tournaments</p>
-                <p style="font-size: 0.85rem;">Check back soon for competitive events!</p>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ============================================
         // GAME STATE
@@ -2243,7 +2265,6 @@
             friends: [],
             incomingInvites: [],
             pendingInvites: [],
-            matchHistory: [],
             // Track each stick individually: true = present, false = removed
             board: [
                 [true],                                           // Row 0: 1 stick
@@ -2264,18 +2285,6 @@
             { id: 3, address: 'ALGOWZ5Y1T...', rating: 1520, wager: 0.01 },
             { id: 4, address: 'ALGOKL4H9D...', rating: 980, wager: 0.0001 },
             { id: 5, address: 'ALGOMN7V2X...', rating: 1680, wager: 0.1 },
-        ];
-
-        // Simulated leaderboard data
-        const leaderboardData = [
-            { address: 'ALGO7X9K2MPQRST...', name: 'CryptoKing', rating: 1850, wins: 142, losses: 45, earned: 12.5 },
-            { address: 'ALGOP3QR8NVZWXY...', name: 'NimMaster', rating: 1720, wins: 98, losses: 32, earned: 8.2 },
-            { address: 'ALGOWZ5Y1TKLMNO...', name: 'StickSlayer', rating: 1680, wins: 87, losses: 41, earned: 5.8 },
-            { address: 'ALGOKL4H9DMNPQR...', name: null, rating: 1590, wins: 65, losses: 38, earned: 3.2 },
-            { address: 'ALGOMN7V2XYZABC...', name: 'BlockBoss', rating: 1520, wins: 54, losses: 29, earned: 2.1 },
-            { address: 'ALGOJK8P5RTYUIO...', name: null, rating: 1480, wins: 43, losses: 31, earned: 1.5 },
-            { address: 'ALGODF6G3HJKLZX...', name: 'AlgoAce', rating: 1450, wins: 38, losses: 27, earned: 1.2 },
-            { address: 'ALGOLM2N9QWERTY...', name: null, rating: 1380, wins: 29, losses: 25, earned: 0.8 },
         ];
 
         // Reminder system config
@@ -2325,8 +2334,6 @@
         const DOM = {
             // Header
             connectBtn: document.getElementById('connectBtn'),
-            balanceDisplay: document.getElementById('balanceDisplay'),
-            balanceAmount: document.getElementById('balanceAmount'),
             
             // Matchmaking
             findMatchBtn: document.getElementById('findMatchBtn'),
@@ -2342,7 +2349,6 @@
             timerModeBadge: document.getElementById('timerModeBadge'),
             
             // Invite system
-            invitePlayerBtn: document.getElementById('invitePlayerBtn'),
             inviteModal: document.getElementById('inviteModal'),
             closeInviteX: document.getElementById('closeInviteX'),
             inviteAddressInput: document.getElementById('inviteAddressInput'),
@@ -2353,13 +2359,17 @@
             pendingInvitesPanel: document.getElementById('pendingInvitesPanel'),
             pendingInvitesList: document.getElementById('pendingInvitesList'),
             
-            // Friends system
-            incomingInvitesPanel: document.getElementById('incomingInvitesPanel'),
-            incomingInvitesList: document.getElementById('incomingInvitesList'),
-            friendsPanel: document.getElementById('friendsPanel'),
-            friendsList: document.getElementById('friendsList'),
-            friendCount: document.getElementById('friendCount'),
-            addFriendBtn: document.getElementById('addFriendBtn'),
+            // Friends system - now in header dropdowns
+            headerIcons: document.getElementById('headerIcons'),
+            challengesBtn: document.getElementById('challengesBtn'),
+            challengesBadge: document.getElementById('challengesBadge'),
+            challengesDropdown: document.getElementById('challengesDropdown'),
+            challengesDropdownList: document.getElementById('challengesDropdownList'),
+            friendsBtn: document.getElementById('friendsBtn'),
+            friendsBadge: document.getElementById('friendsBadge'),
+            friendsDropdown: document.getElementById('friendsDropdown'),
+            friendsDropdownList: document.getElementById('friendsDropdownList'),
+            addFriendBtnHeader: document.getElementById('addFriendBtnHeader'),
             addFriendModal: document.getElementById('addFriendModal'),
             closeAddFriendX: document.getElementById('closeAddFriendX'),
             friendAddressInput: document.getElementById('friendAddressInput'),
@@ -2367,11 +2377,12 @@
             cancelAddFriendBtn: document.getElementById('cancelAddFriendBtn'),
             confirmAddFriendBtn: document.getElementById('confirmAddFriendBtn'),
             
-            // Stats
-            statWins: document.getElementById('statWins'),
-            statLosses: document.getElementById('statLosses'),
-            statRating: document.getElementById('statRating'),
-            statEarnings: document.getElementById('statEarnings'),
+            // Stats (now in header)
+            headerStats: document.getElementById('headerStats'),
+            statWins: document.getElementById('headerWins'),
+            statLosses: document.getElementById('headerLosses'),
+            statRating: document.getElementById('headerRating'),
+            statEarnings: document.getElementById('headerEarned'),
             
             // Screens
             welcomeScreen: document.getElementById('welcomeScreen'),
@@ -2424,18 +2435,17 @@
             // Update UI
             DOM.connectBtn.textContent = address.substring(0, 6) + '...' + address.substring(54);
             DOM.connectBtn.classList.add('connected');
-            DOM.balanceDisplay.style.display = 'block';
-            DOM.balanceAmount.textContent = GameState.wallet.balance.toFixed(2);
             DOM.yourAddress.textContent = address.substring(0, 8) + '...';
+            DOM.headerStats.classList.add('visible');
+            DOM.headerIcons.classList.add('visible');
             
             DOM.findMatchBtn.disabled = false;
             DOM.findMatchBtn.textContent = 'FIND MATCH';
-            DOM.invitePlayerBtn.disabled = false;
             DOM.matchStatus.textContent = 'Ready to play!';
             
             // Render lobby with available matches
             renderLobby();
-            renderFriends();
+            renderFriendsDropdown();
             
             // Simulate receiving an invite for demo
             setTimeout(() => {
@@ -2666,77 +2676,86 @@
         // ============================================
         // FRIENDS SYSTEM
         // ============================================
-        function renderFriends() {
-            if (!GameState.wallet.connected) {
-                DOM.friendsPanel.style.display = 'none';
-                return;
+        function renderFriendsDropdown() {
+            if (!GameState.wallet.connected) return;
+
+            // Update badge
+            const onlineFriends = GameState.friends.filter(() => Math.random() > 0.5).length;
+            if (onlineFriends > 0) {
+                DOM.friendsBadge.textContent = onlineFriends;
+                DOM.friendsBadge.classList.remove('hidden');
+            } else {
+                DOM.friendsBadge.classList.add('hidden');
             }
 
-            DOM.friendsPanel.style.display = 'block';
-            DOM.friendCount.textContent = `(${GameState.friends.length})`;
-
             if (GameState.friends.length === 0) {
-                DOM.friendsList.innerHTML = '<div class="friends-empty">No friends yet. Add some!</div>';
+                DOM.friendsDropdownList.innerHTML = '<div class="dropdown-empty">No friends yet. Add some!</div>';
                 return;
             }
 
             let html = '';
             GameState.friends.forEach((friend, idx) => {
-                const isOnline = Math.random() > 0.5; // Simulated - would come from server
+                const isOnline = Math.random() > 0.5;
                 html += `
-                    <div class="friend-item">
-                        <div class="friend-info">
-                            <div class="friend-avatar">👤</div>
-                            <div class="friend-details">
-                                <div class="friend-name">${friend.nickname || friend.address.substring(0,8) + '...'}</div>
-                                <div class="friend-status ${isOnline ? 'online' : 'offline'}">
-                                    <span class="status-dot"></span>
-                                    ${isOnline ? 'Online' : 'Offline'}
-                                </div>
+                    <div class="dropdown-item">
+                        <div class="dropdown-item-info">
+                            <div class="dropdown-avatar">👤</div>
+                            <div>
+                                <div class="dropdown-name">${friend.nickname || friend.address.substring(0,8) + '...'}</div>
+                                <div class="dropdown-detail" style="color:${isOnline ? 'var(--neon-green)' : '#666'}">${isOnline ? '● Online' : '○ Offline'}</div>
                             </div>
                         </div>
-                        <div class="friend-actions">
-                            <button class="btn-challenge-friend" onclick="challengeFriend(${idx})">CHALLENGE</button>
-                            <button class="btn-remove-friend" onclick="removeFriend(${idx})">×</button>
+                        <div class="dropdown-actions">
+                            <button class="dropdown-btn challenge" onclick="challengeFriend(${idx})">⚔️</button>
                         </div>
                     </div>
                 `;
             });
 
-            DOM.friendsList.innerHTML = html;
+            DOM.friendsDropdownList.innerHTML = html;
         }
 
-        function renderIncomingInvites() {
-            if (GameState.incomingInvites.length === 0) {
-                DOM.incomingInvitesPanel.style.display = 'none';
-                return;
+        function renderChallengesDropdown() {
+            // Update badge
+            if (GameState.incomingInvites.length > 0) {
+                DOM.challengesBadge.textContent = GameState.incomingInvites.length;
+                DOM.challengesBadge.classList.remove('hidden');
+            } else {
+                DOM.challengesBadge.classList.add('hidden');
             }
 
-            DOM.incomingInvitesPanel.style.display = 'block';
+            if (GameState.incomingInvites.length === 0) {
+                DOM.challengesDropdownList.innerHTML = '<div class="dropdown-empty">No pending challenges</div>';
+                return;
+            }
             
             let html = '';
             GameState.incomingInvites.forEach((invite, idx) => {
                 const timeAgo = Math.floor((Date.now() - invite.receivedAt) / 60000);
                 const fromDisplay = invite.fromNickname || invite.from.substring(0,10) + '...';
                 html += `
-                    <div class="incoming-invite">
-                        <div class="incoming-invite-header">
-                            <span class="incoming-invite-from">⚔️ ${fromDisplay}</span>
-                            <span class="incoming-invite-time">${timeAgo}m ago</span>
+                    <div class="dropdown-item">
+                        <div class="dropdown-item-info">
+                            <div class="dropdown-avatar" style="background:linear-gradient(135deg, var(--neon-magenta), #ff8c00);">⚔️</div>
+                            <div>
+                                <div class="dropdown-name">${fromDisplay}</div>
+                                <div class="dropdown-detail">${invite.wager} ALGO • ${invite.gameMode} • ${timeAgo}m ago</div>
+                            </div>
                         </div>
-                        <div class="incoming-invite-details">
-                            ${invite.wager} ALGO | ${invite.gameMode}
-                        </div>
-                        <div class="incoming-invite-actions">
-                            <button class="btn-accept" onclick="acceptIncomingInvite(${idx})">ACCEPT</button>
-                            <button class="btn-decline" onclick="declineIncomingInvite(${idx})">DECLINE</button>
+                        <div class="dropdown-actions">
+                            <button class="dropdown-btn accept" onclick="acceptIncomingInvite(${idx})">✓</button>
+                            <button class="dropdown-btn decline" onclick="declineIncomingInvite(${idx})">✕</button>
                         </div>
                     </div>
                 `;
             });
 
-            DOM.incomingInvitesList.innerHTML = html;
+            DOM.challengesDropdownList.innerHTML = html;
         }
+
+        // Legacy function names for compatibility
+        function renderFriends() { renderFriendsDropdown(); }
+        function renderIncomingInvites() { renderChallengesDropdown(); }
 
         function addFriend(address, nickname) {
             if (!address || address.length !== 58) {
@@ -3012,7 +3031,6 @@
             DOM.statLosses.textContent = GameState.stats.losses;
             DOM.statRating.textContent = Math.max(0, GameState.stats.rating);
             DOM.statEarnings.textContent = GameState.stats.earnings.toFixed(2);
-            DOM.balanceAmount.textContent = GameState.wallet.balance.toFixed(2);
             
             renderActiveGames();
             DOM.resultModal.classList.add('active');
@@ -3067,7 +3085,6 @@
             DOM.statLosses.textContent = GameState.stats.losses;
             DOM.statRating.textContent = Math.max(0, GameState.stats.rating);
             DOM.statEarnings.textContent = GameState.stats.earnings.toFixed(2);
-            DOM.balanceAmount.textContent = GameState.wallet.balance.toFixed(2);
             
             renderActiveGames();
             DOM.resultModal.classList.add('active');
@@ -3468,19 +3485,6 @@
             }
             
             const modeName = GAME_MODES[GameState.match.gameMode]?.name || 'Casual';
-            const reason = didWin ? 'Opponent took last stick' : 'You took last stick';
-            
-            // Record to match history
-            GameState.matchHistory.unshift({
-                opponent: GameState.match.opponent,
-                wager: GameState.match.wager,
-                mode: modeName,
-                won: didWin,
-                reason: reason,
-                pot: GameState.match.pot,
-                date: new Date().toLocaleDateString()
-            });
-            if (GameState.matchHistory.length > 20) GameState.matchHistory.pop();
             
             // Generate transaction note for winner's payment
             let txnNote = '';
@@ -3523,7 +3527,6 @@
             DOM.statLosses.textContent = GameState.stats.losses;
             DOM.statRating.textContent = Math.max(0, GameState.stats.rating);
             DOM.statEarnings.textContent = GameState.stats.earnings.toFixed(2);
-            DOM.balanceAmount.textContent = GameState.wallet.balance.toFixed(2);
             
             // Update active games panel
             renderActiveGames();
@@ -3586,12 +3589,30 @@
         DOM.playAgainBtn.addEventListener('click', returnToLobby);
         DOM.closeResultX.addEventListener('click', returnToLobby);
 
-        // Invite system
-        DOM.invitePlayerBtn.addEventListener('click', () => {
-            DOM.inviteWagerDisplay.textContent = GameState.match.wager + ' ALGO';
-            DOM.inviteModeDisplay.textContent = GAME_MODES[GameState.lobby.selectedMode].name;
-            openInviteModal();
+        // Header dropdown toggles
+        DOM.challengesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            DOM.challengesDropdown.classList.toggle('active');
+            DOM.friendsDropdown.classList.remove('active');
         });
+
+        DOM.friendsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            DOM.friendsDropdown.classList.toggle('active');
+            DOM.challengesDropdown.classList.remove('active');
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!DOM.challengesBtn.contains(e.target)) {
+                DOM.challengesDropdown.classList.remove('active');
+            }
+            if (!DOM.friendsBtn.contains(e.target)) {
+                DOM.friendsDropdown.classList.remove('active');
+            }
+        });
+
+        // Invite modal
         DOM.closeInviteX.addEventListener('click', closeInviteModal);
         DOM.cancelInviteBtn.addEventListener('click', closeInviteModal);
         DOM.sendInviteBtn.addEventListener('click', submitInvite);
@@ -3599,8 +3620,8 @@
             if (e.target === DOM.inviteModal) closeInviteModal();
         });
 
-        // Friends system
-        DOM.addFriendBtn.addEventListener('click', openAddFriendModal);
+        // Friends system - add friend from header
+        DOM.addFriendBtnHeader.addEventListener('click', openAddFriendModal);
         DOM.closeAddFriendX.addEventListener('click', closeAddFriendModal);
         DOM.cancelAddFriendBtn.addEventListener('click', closeAddFriendModal);
         DOM.confirmAddFriendBtn.addEventListener('click', () => {
@@ -3619,173 +3640,6 @@
 
         DOM.resultModal.addEventListener('click', (e) => {
             if (e.target === DOM.resultModal) returnToLobby();
-        });
-
-        // ============================================
-        // LEADERBOARD & PROFILE SYSTEM
-        // ============================================
-        const leaderboardModal = document.getElementById('leaderboardModal');
-        const playerProfileModal = document.getElementById('playerProfileModal');
-        const tournamentModal = document.getElementById('tournamentModal');
-
-        document.getElementById('rankingsBtn').addEventListener('click', () => {
-            renderLeaderboard('rating');
-            leaderboardModal.classList.add('active');
-        });
-
-        document.getElementById('tournamentsBtn').addEventListener('click', () => {
-            tournamentModal.classList.add('active');
-        });
-
-        document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
-            leaderboardModal.classList.remove('active');
-        });
-
-        document.getElementById('closePlayerProfileBtn').addEventListener('click', () => {
-            playerProfileModal.classList.remove('active');
-        });
-
-        document.getElementById('closeTournamentBtn').addEventListener('click', () => {
-            tournamentModal.classList.remove('active');
-        });
-
-        leaderboardModal.addEventListener('click', (e) => {
-            if (e.target === leaderboardModal) leaderboardModal.classList.remove('active');
-        });
-
-        playerProfileModal.addEventListener('click', (e) => {
-            if (e.target === playerProfileModal) playerProfileModal.classList.remove('active');
-        });
-
-        tournamentModal.addEventListener('click', (e) => {
-            if (e.target === tournamentModal) tournamentModal.classList.remove('active');
-        });
-
-        document.querySelectorAll('.leaderboard-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.leaderboard-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderLeaderboard(tab.dataset.sort);
-            });
-        });
-
-        function renderLeaderboard(sortBy) {
-            const sorted = [...leaderboardData].sort((a, b) => b[sortBy] - a[sortBy]);
-            const list = document.getElementById('leaderboardList');
-            
-            let html = '';
-            sorted.forEach((player, index) => {
-                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
-                const displayValue = sortBy === 'rating' ? player.rating : 
-                                    sortBy === 'wins' ? player.wins : 
-                                    player.earned.toFixed(2);
-                
-                html += `
-                    <div class="leaderboard-item" onclick="showPlayerProfile('${player.address}')">
-                        <div class="leaderboard-rank ${rankClass}">${index + 1}</div>
-                        <div class="leaderboard-player">
-                            <div class="leaderboard-name">${player.name || player.address.substring(0, 12) + '...'}</div>
-                            <div class="leaderboard-address">${player.address}</div>
-                        </div>
-                        <div class="leaderboard-stats">
-                            <div class="leaderboard-value">${displayValue}</div>
-                            <div class="leaderboard-record">${player.wins}W - ${player.losses}L</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            list.innerHTML = html;
-        }
-
-        function showPlayerProfile(address) {
-            const player = leaderboardData.find(p => p.address === address);
-            if (!player) return;
-            
-            document.getElementById('playerProfileName').textContent = player.name || 'Player';
-            document.getElementById('playerProfileAddress').textContent = player.address;
-            document.getElementById('playerProfileWins').textContent = player.wins;
-            document.getElementById('playerProfileLosses').textContent = player.losses;
-            document.getElementById('playerProfileRating').textContent = player.rating;
-            document.getElementById('playerProfileEarned').textContent = player.earned.toFixed(2);
-            
-            // Simulated match history for other players
-            let historyHtml = '';
-            for (let i = 0; i < 5; i++) {
-                const won = Math.random() > 0.4;
-                const opp = 'ALGO' + Math.random().toString(36).substring(2, 8).toUpperCase() + '...';
-                const wager = [0.0001, 0.001, 0.01][Math.floor(Math.random() * 3)];
-                const mode = ['Casual', 'Speed', 'Blitz'][Math.floor(Math.random() * 3)];
-                historyHtml += `
-                    <div class="match-history-item">
-                        <span class="match-opponent">vs ${opp}</span>
-                        <span class="match-wager">${wager}</span>
-                        <span class="match-mode">${mode}</span>
-                        <span class="match-result ${won ? 'win' : 'loss'}">${won ? 'WIN' : 'LOSS'}</span>
-                    </div>
-                `;
-            }
-            document.getElementById('playerMatchHistory').innerHTML = historyHtml;
-            
-            leaderboardModal.classList.remove('active');
-            playerProfileModal.classList.add('active');
-        }
-
-        function showMyProfile() {
-            document.getElementById('playerProfileName').textContent = 'You';
-            document.getElementById('playerProfileAddress').textContent = GameState.wallet.address || 'Not connected';
-            document.getElementById('playerProfileWins').textContent = GameState.stats.wins;
-            document.getElementById('playerProfileLosses').textContent = GameState.stats.losses;
-            document.getElementById('playerProfileRating').textContent = GameState.stats.rating;
-            document.getElementById('playerProfileEarned').textContent = GameState.stats.earnings.toFixed(2);
-            
-            // Show YOUR actual match history
-            let historyHtml = '';
-            if (GameState.matchHistory.length === 0) {
-                historyHtml = '<div style="color:#666;text-align:center;padding:1.5rem;">No matches yet. Play some games!</div>';
-            } else {
-                GameState.matchHistory.forEach(m => {
-                    historyHtml += `
-                        <div class="match-history-item">
-                            <span class="match-opponent">vs ${m.opponent.substring(0, 10)}...</span>
-                            <span class="match-wager">${m.wager}</span>
-                            <span class="match-mode">${m.mode}</span>
-                            <span class="match-result ${m.won ? 'win' : 'loss'}">${m.won ? 'WIN' : 'LOSS'}</span>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('playerMatchHistory').innerHTML = historyHtml;
-            
-            // Hide action buttons for own profile
-            document.getElementById('profileAddFriendBtn').style.display = 'none';
-            document.getElementById('profileChallengeBtn').style.display = 'none';
-            
-            playerProfileModal.classList.add('active');
-        }
-
-        document.getElementById('profileAddFriendBtn').addEventListener('click', () => {
-            const addr = document.getElementById('playerProfileAddress').textContent;
-            if (!GameState.friends.find(f => f.address === addr)) {
-                GameState.friends.push({ address: addr, nickname: null, addedAt: Date.now() });
-                renderFriends();
-                alert('Added to friends!');
-            }
-        });
-
-        document.getElementById('profileChallengeBtn').addEventListener('click', () => {
-            const addr = document.getElementById('playerProfileAddress').textContent;
-            playerProfileModal.classList.remove('active');
-            DOM.inviteAddressInput.value = addr;
-            openInviteModal();
-        });
-
-        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
-            if (GameState.wallet.connected) {
-                showMyProfile();
-            } else {
-                alert('Connect your wallet first!');
-            }
         });
 
         // ============================================
