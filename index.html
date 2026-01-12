@@ -10,6 +10,10 @@
     <script src="https://unpkg.com/algosdk@2.7.0/dist/browser/algosdk.min.js"></script>
     <!-- Pera Wallet Connect -->
     <script src="https://unpkg.com/@perawallet/connect@1.3.4/dist/index.umd.js"></script>
+    <!-- Defly Wallet Connect -->
+    <script src="https://unpkg.com/@blockshake/defly-connect@1.2.1/dist/index.umd.js"></script>
+    <!-- Lute Wallet Connect -->
+    <script src="https://unpkg.com/lute-connect@1.4.1/dist/index.umd.js"></script>
 
     <style>
         * {
@@ -2479,6 +2483,8 @@
         const ALGO_CONFIG = {
             // Mainnet configuration
             NETWORK: 'mainnet',
+            GENESIS_ID: 'mainnet-v1.0',
+            GENESIS_HASH: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
             ALGOD_SERVER: 'https://mainnet-api.algonode.cloud',
             ALGOD_PORT: '',
             ALGOD_TOKEN: '',
@@ -2499,20 +2505,77 @@
             ALGO_CONFIG.ALGOD_PORT
         );
 
+        // ============================================
+        // WALLET PROVIDERS
+        // ============================================
+        // Initialize all wallet providers
+        const walletProviders = {
+            pera: null,
+            defly: null,
+            lute: null
+        };
+
+        // Active wallet type
+        let activeWalletType = null;
+
         // Initialize Pera Wallet
-        const peraWallet = new PeraWalletConnect();
+        try {
+            walletProviders.pera = new PeraWalletConnect();
+        } catch (e) {
+            console.warn('Pera Wallet SDK not loaded:', e);
+        }
 
-        // Reconnect session on page load
-        peraWallet.reconnectSession().then((accounts) => {
-            if (accounts.length > 0) {
-                handleWalletConnected(accounts[0]);
+        // Initialize Defly Wallet
+        try {
+            if (typeof DeflyWalletConnect !== 'undefined') {
+                walletProviders.defly = new DeflyWalletConnect();
             }
-        }).catch(console.error);
+        } catch (e) {
+            console.warn('Defly Wallet SDK not loaded:', e);
+        }
 
-        // Handle disconnect events
-        peraWallet.connector?.on('disconnect', () => {
-            handleWalletDisconnected();
-        });
+        // Initialize Lute Wallet
+        try {
+            if (typeof LuteConnect !== 'undefined') {
+                walletProviders.lute = new LuteConnect('AlgoNim');
+            }
+        } catch (e) {
+            console.warn('Lute Wallet SDK not loaded:', e);
+        }
+
+        // Auto-reconnect on page load
+        async function attemptAutoReconnect() {
+            // Try Pera first
+            if (walletProviders.pera) {
+                try {
+                    const accounts = await walletProviders.pera.reconnectSession();
+                    if (accounts && accounts.length > 0) {
+                        activeWalletType = 'pera';
+                        await handleWalletConnected(accounts[0], 'pera');
+                        return;
+                    }
+                } catch (e) {
+                    console.log('No Pera session to reconnect');
+                }
+            }
+
+            // Try Defly
+            if (walletProviders.defly) {
+                try {
+                    const accounts = await walletProviders.defly.reconnectSession();
+                    if (accounts && accounts.length > 0) {
+                        activeWalletType = 'defly';
+                        await handleWalletConnected(accounts[0], 'defly');
+                        return;
+                    }
+                } catch (e) {
+                    console.log('No Defly session to reconnect');
+                }
+            }
+        }
+
+        // Run auto-reconnect
+        attemptAutoReconnect();
 
         // ============================================
         // GAME STATE
@@ -2722,15 +2785,18 @@
         }
 
         // Handle successful wallet connection
-        async function handleWalletConnected(address) {
+        async function handleWalletConnected(address, walletType) {
             GameState.wallet.connected = true;
             GameState.wallet.address = address;
+            GameState.wallet.type = walletType;
+            activeWalletType = walletType;
 
             // Fetch real balance
             GameState.wallet.balance = await fetchAccountBalance(address);
 
             // Update UI
-            DOM.connectBtn.textContent = address.substring(0, 6) + '...' + address.substring(54);
+            const walletIcon = { pera: '📱', defly: '🦋', lute: '🎸', exodus: '💎' }[walletType] || '🔐';
+            DOM.connectBtn.textContent = `${walletIcon} ${address.substring(0, 4)}...${address.substring(54)}`;
             DOM.connectBtn.classList.add('connected');
             DOM.yourAddress.textContent = address.substring(0, 8) + '...';
             DOM.headerStats.classList.add('visible');
@@ -2740,11 +2806,14 @@
             DOM.findMatchBtn.textContent = 'FIND MATCH';
             DOM.matchStatus.textContent = `Ready to play! Balance: ${GameState.wallet.balance.toFixed(4)} ALGO`;
 
+            // Fetch player stats from server
+            fetchPlayerStats(address);
+
             // Render lobby with available matches
             renderLobby();
             renderFriendsDropdown();
 
-            console.log(`Connected to mainnet: ${address} (${GameState.wallet.balance.toFixed(4)} ALGO)`);
+            console.log(`Connected via ${walletType} to mainnet: ${address} (${GameState.wallet.balance.toFixed(4)} ALGO)`);
         }
 
         // Handle wallet disconnection
@@ -2752,6 +2821,8 @@
             GameState.wallet.connected = false;
             GameState.wallet.address = null;
             GameState.wallet.balance = 0;
+            GameState.wallet.type = null;
+            activeWalletType = null;
 
             DOM.connectBtn.textContent = 'CONNECT';
             DOM.connectBtn.classList.remove('connected');
@@ -2767,55 +2838,289 @@
         // Connect to wallet
         async function connectWallet(walletType) {
             closeWalletModal();
+            DOM.matchStatus.textContent = `Connecting to ${walletType}...`;
 
             try {
-                if (walletType === 'pera') {
-                    // Real Pera Wallet connection
-                    DOM.matchStatus.textContent = 'Opening Pera Wallet...';
-                    const accounts = await peraWallet.connect();
+                let accounts = [];
 
-                    if (accounts.length > 0) {
-                        await handleWalletConnected(accounts[0]);
-                    }
-                } else if (walletType === 'defly') {
-                    // Defly Wallet - show instruction
-                    alert('Defly Wallet: Please install the Defly app and use WalletConnect.\n\nFor now, use Pera Wallet for the best experience.');
-                    openWalletModal();
-                } else if (walletType === 'exodus') {
-                    // Exodus - browser extension
-                    if (typeof window.exodus !== 'undefined' && window.exodus.algorand) {
-                        const accounts = await window.exodus.algorand.connect();
-                        if (accounts.length > 0) {
-                            await handleWalletConnected(accounts[0]);
+                switch (walletType) {
+                    case 'pera':
+                        // Pera Wallet connection
+                        if (!walletProviders.pera) {
+                            throw new Error('Pera Wallet SDK not loaded');
                         }
-                    } else {
-                        alert('Exodus Wallet not detected. Please install the Exodus browser extension.');
-                        openWalletModal();
-                    }
-                } else if (walletType === 'lute') {
-                    // Lute - desktop app
-                    alert('Lute Wallet: Please use the Lute desktop app with WalletConnect.\n\nFor now, use Pera Wallet for the best experience.');
-                    openWalletModal();
+                        accounts = await walletProviders.pera.connect();
+                        // Set up disconnect listener
+                        walletProviders.pera.connector?.on('disconnect', handleWalletDisconnected);
+                        break;
+
+                    case 'defly':
+                        // Defly Wallet connection
+                        if (!walletProviders.defly) {
+                            throw new Error('Defly Wallet SDK not loaded. Please install Defly app.');
+                        }
+                        accounts = await walletProviders.defly.connect();
+                        // Set up disconnect listener
+                        walletProviders.defly.connector?.on('disconnect', handleWalletDisconnected);
+                        break;
+
+                    case 'lute':
+                        // Lute Wallet connection
+                        if (!walletProviders.lute) {
+                            throw new Error('Lute Wallet SDK not loaded');
+                        }
+                        // Lute requires genesis ID for connection
+                        accounts = await walletProviders.lute.connect(ALGO_CONFIG.GENESIS_ID);
+                        break;
+
+                    case 'exodus':
+                        // Exodus browser extension
+                        if (typeof window.exodus === 'undefined' || !window.exodus.algorand) {
+                            throw new Error('Exodus Wallet not detected. Please install the Exodus browser extension.');
+                        }
+                        accounts = await window.exodus.algorand.connect();
+                        break;
+
+                    default:
+                        throw new Error('Unknown wallet type');
                 }
+
+                if (accounts && accounts.length > 0) {
+                    await handleWalletConnected(accounts[0], walletType);
+                } else {
+                    throw new Error('No accounts returned from wallet');
+                }
+
             } catch (error) {
                 console.error('Wallet connection error:', error);
 
-                if (error.message?.includes('cancelled') || error.message?.includes('rejected')) {
+                // Handle user cancellation
+                if (error.message?.includes('cancelled') ||
+                    error.message?.includes('rejected') ||
+                    error.message?.includes('CONNECT_MODAL_CLOSED') ||
+                    error.data?.type === 'CONNECT_MODAL_CLOSED') {
                     DOM.matchStatus.textContent = 'Connection cancelled. Try again!';
                 } else {
-                    DOM.matchStatus.textContent = 'Connection failed. Please try again.';
+                    DOM.matchStatus.textContent = error.message || 'Connection failed. Please try again.';
                 }
+
+                // Re-open wallet modal for retry
+                setTimeout(() => {
+                    if (!GameState.wallet.connected) {
+                        openWalletModal();
+                    }
+                }, 2000);
             }
         }
 
         // Disconnect wallet
         async function disconnectWallet() {
             try {
-                await peraWallet.disconnect();
+                // Disconnect from active wallet provider
+                switch (activeWalletType) {
+                    case 'pera':
+                        if (walletProviders.pera) await walletProviders.pera.disconnect();
+                        break;
+                    case 'defly':
+                        if (walletProviders.defly) await walletProviders.defly.disconnect();
+                        break;
+                    case 'lute':
+                        if (walletProviders.lute) walletProviders.lute.disconnect();
+                        break;
+                }
             } catch (error) {
                 console.error('Disconnect error:', error);
             }
             handleWalletDisconnected();
+        }
+
+        // ============================================
+        // TRANSACTION SIGNING
+        // ============================================
+
+        // Sign transaction with active wallet
+        async function signTransaction(txn) {
+            if (!activeWalletType || !GameState.wallet.connected) {
+                throw new Error('No wallet connected');
+            }
+
+            const encodedTxn = algosdk.encodeUnsignedTransaction(txn);
+
+            switch (activeWalletType) {
+                case 'pera':
+                    const peraSignedTxns = await walletProviders.pera.signTransaction([[{ txn: encodedTxn }]]);
+                    return peraSignedTxns[0];
+
+                case 'defly':
+                    const deflySignedTxns = await walletProviders.defly.signTransaction([[{ txn: encodedTxn }]]);
+                    return deflySignedTxns[0];
+
+                case 'lute':
+                    const luteSignedTxns = await walletProviders.lute.signTxns([{ txn: encodedTxn }]);
+                    return luteSignedTxns[0];
+
+                case 'exodus':
+                    const exodusResult = await window.exodus.algorand.signTransaction([txn]);
+                    return exodusResult[0];
+
+                default:
+                    throw new Error('Unknown wallet type');
+            }
+        }
+
+        // Create and sign a wager payment transaction
+        async function createWagerTransaction(receiverAddress, amountInAlgo, note = '') {
+            const suggestedParams = await algodClient.getTransactionParams().do();
+
+            const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+                from: GameState.wallet.address,
+                to: receiverAddress,
+                amount: Math.floor(amountInAlgo * 1000000), // Convert ALGO to microAlgos
+                note: new Uint8Array(Buffer.from(note)),
+                suggestedParams
+            });
+
+            return txn;
+        }
+
+        // Send signed transaction to network
+        async function sendTransaction(signedTxn) {
+            const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
+            console.log('Transaction sent:', txId);
+
+            // Wait for confirmation
+            const result = await algosdk.waitForConfirmation(algodClient, txId, 4);
+            console.log('Transaction confirmed in round:', result['confirmed-round']);
+
+            return { txId, confirmedRound: result['confirmed-round'] };
+        }
+
+        // ============================================
+        // API FUNCTIONS
+        // ============================================
+
+        // Fetch player stats from worker
+        async function fetchPlayerStats(address) {
+            try {
+                const response = await fetch(
+                    `${ALGO_CONFIG.WORKER_URL}/api/player-stats?address=${address}`
+                );
+                const data = await response.json();
+
+                if (data && !data.error) {
+                    GameState.stats.wins = data.wins || 0;
+                    GameState.stats.losses = data.losses || 0;
+                    GameState.stats.rating = data.rating || 1200;
+
+                    // Update UI
+                    DOM.statWins.textContent = GameState.stats.wins;
+                    DOM.statLosses.textContent = GameState.stats.losses;
+                    DOM.statRating.textContent = GameState.stats.rating;
+                }
+            } catch (error) {
+                console.error('Error fetching player stats:', error);
+            }
+        }
+
+        // Find match via worker API
+        async function findMatchAPI() {
+            try {
+                const response = await fetch(`${ALGO_CONFIG.WORKER_URL}/api/find-match`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: GameState.wallet.address,
+                        wager: GameState.match.wager,
+                        rating: GameState.stats.rating,
+                        gameMode: GameState.lobby.selectedMode
+                    })
+                });
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error finding match:', error);
+                throw error;
+            }
+        }
+
+        // Poll for match status
+        async function pollMatchAPI() {
+            try {
+                const response = await fetch(`${ALGO_CONFIG.WORKER_URL}/api/poll-match`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: GameState.wallet.address
+                    })
+                });
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error polling match:', error);
+                throw error;
+            }
+        }
+
+        // Cancel search
+        async function cancelSearchAPI() {
+            try {
+                const response = await fetch(`${ALGO_CONFIG.WORKER_URL}/api/cancel-search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: GameState.wallet.address
+                    })
+                });
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error cancelling search:', error);
+            }
+        }
+
+        // Submit move to server
+        async function submitMoveAPI(gameId, move) {
+            try {
+                const response = await fetch(`${ALGO_CONFIG.WORKER_URL}/api/make-move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gameId,
+                        address: GameState.wallet.address,
+                        move
+                    })
+                });
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error submitting move:', error);
+                throw error;
+            }
+        }
+
+        // Get game state from server
+        async function getGameStateAPI(gameId) {
+            try {
+                const response = await fetch(
+                    `${ALGO_CONFIG.WORKER_URL}/api/game-state?gameId=${gameId}&address=${GameState.wallet.address}`
+                );
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error getting game state:', error);
+                throw error;
+            }
+        }
+
+        // Get leaderboard
+        async function getLeaderboardAPI() {
+            try {
+                const response = await fetch(`${ALGO_CONFIG.WORKER_URL}/api/leaderboard`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                return { leaderboard: [] };
+            }
         }
 
         // ============================================
